@@ -1,4 +1,3 @@
 streamlit
 g4f
-nest-asyncio
 curl-cffi
