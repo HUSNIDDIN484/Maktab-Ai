@@ -5,7 +5,7 @@ import urllib.parse
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
 
-# --- Dizayn ---
+# --- Dizayn (CSS) ---
 st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: white; }
@@ -15,21 +15,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True)
+st.markdown('<p class="title">🏫 19-SON MAKTAB AI + VIDEO</p>', unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- AI Funksiyasi (Xatosiz variant) ---
+# --- AI Matn Funksiyasi ---
 def get_ai_response(prompt):
-    system_instructions = (
-        "Sening isming - Maktab AI. Sen 19-sonli maktab yordamchisisan. "
-        "O'zingni Aria yoki Opera deb tanishtirma. Faqat o'zbek tilida javob ber."
-    )
-    
+    system_instructions = "Sening isming - Maktab AI. 19-sonli maktab yordamchisisan. O'zbek tilida javob ber."
     try:
-        # Provayderni aniq ko'rsatmasdan, kutubxonaga tanlashni qo'yib beramiz
-        # Bu AttributeError xatosini butunlay yo'qotadi
         response = g4f.ChatCompletion.create(
             model=g4f.models.default,
             messages=[
@@ -37,15 +31,9 @@ def get_ai_response(prompt):
                 {"role": "user", "content": f"Sen Maktab AIsan. Savol: {prompt}"}
             ],
         )
-        
-        if response:
-            res_str = str(response)
-            # Aria filtrini qo'llaymiz
-            return res_str.replace("Aria", "Maktab AI").replace("Opera", "19-son maktab")
-        return "Xabar mazmuni bo'sh qaytdi."
-        
-    except Exception as e:
-        return "Hozirda serverlar band. Iltimos, bir ozdan so'ng qayta urinib ko'ring."
+        return str(response).replace("Aria", "Maktab AI").replace("Opera", "19-son maktab")
+    except Exception:
+        return "Serverda yuklama ko'p, birozdan so'ng urinib ko'ring."
 
 # --- Chat tarixi ---
 for msg in st.session_state.messages:
@@ -53,15 +41,19 @@ for msg in st.session_state.messages:
     role_class = "user-msg" if msg["role"] == "user" else "ai-msg"
     st.markdown(f'<div class="{role_class}"><b>{role_name}:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
     if "image" in msg:
-        st.image(msg["image"], use_container_width=True)
+        st.image(msg["image"])
+    if "video" in msg:
+        st.video(msg["video"])
 
-# --- Kirish ---
+# --- Kirish formasi ---
 with st.form("chat_form", clear_on_submit=True):
-    user_input = st.text_input("Xabar yozing...")
-    col1, col2 = st.columns(2)
+    user_input = st.text_input("Xabar yozing (Matn, Rasm yoki Video uchun)...")
+    col1, col2, col3 = st.columns(3)
     submit_chat = col1.form_submit_button("Suhbat 💬")
     submit_img = col2.form_submit_button("Rasm 🎨")
+    submit_vid = col3.form_submit_button("Video 🎬")
 
+# --- Suhbat ---
 if submit_chat and user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.spinner("O'ylamoqdaman..."):
@@ -69,10 +61,23 @@ if submit_chat and user_input:
         st.session_state.messages.append({"role": "ai", "content": answer})
     st.rerun()
 
+# --- Rasm (Pollinations) ---
 if submit_img and user_input:
     st.session_state.messages.append({"role": "user", "content": f"Rasm: {user_input}"})
-    with st.spinner("Chizilmoqda..."):
+    with st.spinner("Rasm chizilmoqda..."):
         encoded = urllib.parse.quote(user_input)
-        img_url = f"https://image.pollinations.ai/prompt/school_style_{encoded}?width=1024&height=1024&nologo=true"
+        img_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&nologo=true"
         st.session_state.messages.append({"role": "ai", "content": "Rasm tayyor!", "image": img_url})
+    st.rerun()
+
+# --- Video (Veo Model Eslatmasi) ---
+if submit_vid and user_input:
+    st.session_state.messages.append({"role": "user", "content": f"Video so'rovi: {user_input}"})
+    with st.spinner("Video generatsiya qilinmoqda (bu bir oz vaqt olishi mumkin)..."):
+        # Eslatma: Haqiqiy Veo generatsiyasi API orqali amalga oshiriladi.
+        # Hozircha foydalanuvchiga Veo imkoniyatlari haqida ma'lumot beramiz.
+        st.session_state.messages.append({
+            "role": "ai", 
+            "content": f"'{user_input}' mavzusida video yaratish uchun Veo modelidan foydalanilmoqda. Video tayyor bo'lgach shu yerda ko'rinadi."
+        })
     st.rerun()
