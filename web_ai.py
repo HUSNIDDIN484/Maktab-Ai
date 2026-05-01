@@ -2,6 +2,10 @@ import streamlit as st
 import g4f
 import urllib.parse
 import asyncio
+import nest_asyncio
+
+# Asinxron xatoliklarni oldini olish
+nest_asyncio.apply()
 
 # --- Sahifa sozlamalari ---
 st.set_page_config(
@@ -10,127 +14,123 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- Dizayn (CSS) ---
+# --- Maxsus Dizayn (CSS) ---
 st.markdown("""
 <style>
     .stApp {
-        background-color: #121212;
-        color: white;
+        background-color: #0E1117;
+        color: #FAFAFA;
     }
-    .big-font {
-        font-size: 30px !important;
+    .main-title {
+        font-size: 35px !important;
         font-weight: bold;
         color: #3B8ED0;
         text-align: center;
+        text-shadow: 2px 2px 4px #000000;
+        margin-bottom: 20px;
     }
     .stButton>button {
         width: 100%;
+        border-radius: 10px;
         height: 50px;
         font-weight: bold;
+        transition: 0.3s;
     }
     /* Suhbat tugmasi */
     div[data-testid="stHorizontalBlock"] > div:nth-child(1) .stButton>button {
         background-color: #3B8ED0;
         color: white;
+        border: none;
     }
     /* Rasm tugmasi */
-    div[data-testid="stHorizontalBlock"] > div:nth-child(2) .stButton>button {
+    div[data-testid="stHorizontalBlock"] > div:nth-color(2) .stButton>button {
         background-color: #A349A4;
         color: white;
+        border: none;
     }
-    .user-msg {
+    .user-box {
         background-color: #262730;
-        padding: 10px;
-        border-radius: 10px;
+        padding: 15px;
+        border-radius: 15px;
         margin-bottom: 10px;
+        border: 1px solid #3B8ED0;
     }
-    .ai-msg {
+    .ai-box {
         background-color: #1E1E1E;
-        padding: 10px;
-        border-radius: 10px;
-        border-left: 5px solid #3B8ED0;
+        padding: 15px;
+        border-radius: 15px;
+        border-left: 6px solid #3B8ED0;
         margin-bottom: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# sarlavha
-st.markdown('<p class="big-font">🏫 19-SON MAKTAB AI YORDAMCHISI</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">🏫 19-SON MAKTAB AI v3.0</p>', unsafe_allow_html=True)
 
-# --- Chat tarixini saqlash ---
+# --- Xotira (Chat History) ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- Asinxron chat funksiyasi ---
+# --- AI bilan bog'lanish (Matn) ---
 async def get_ai_response(prompt):
     try:
-        # Tizim ko'rsatmasi
-        system_msg = "Sen 19-sonli maktab yordamchisisan. Seni 19-son maktab jamoasi yaratgan. O'zbek tilida javob ber."
+        # AI o'zini Aria deb tanishtirmasligi uchun qat'iy ko'rsatma
+        system_instructions = (
+            "Sening isming 'Maktab AI'. Sen 19-sonli maktabning maxsus intellektual yordamchisisan. "
+            "Seni 19-son maktab jamoasi yaratgan. O'zingni Aria yoki Opera deb tanishtirma. "
+            "Faqat o'zbek tilida, do'stona va o'quvchilarga tushunarli tilda javob ber."
+        )
         
         response = await g4f.ChatCompletion.create_async(
-            model=g4f.models.default,
+            model=g4f.models.gpt_4o,
+            provider=g4f.Provider.Blackbox, # Barqaror provayder
             messages=[
-                {"role": "system", "content": system_msg},
+                {"role": "system", "content": system_instructions},
                 {"role": "user", "content": prompt}
             ]
         )
         return response
-    except Exception as e:
-        return f"Xatolik yuz berdi: {str(e)}"
+    except Exception:
+        return "Hozirda serverda yuklama ko'p. Iltimos, birozdan so'ng qayta urinib ko'ring."
 
-# --- Rasm yaratish funksiyasi ---
-def generate_image_url(prompt):
-    # Pollinations AI orqali tezkor link yaratish
-    encoded_prompt = urllib.parse.quote(f"school style, {prompt}")
-    image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true"
-    return image_url
+# --- Rasm yaratish ---
+def get_image_link(prompt):
+    # Pollinations - eng tezkor rasm generatori
+    encoded_text = urllib.parse.quote(f"digital art, high quality, school theme, {prompt}")
+    return f"https://image.pollinations.ai/prompt/{encoded_text}?width=1024&height=1024&nologo=true"
 
-# --- Interfeys elementlari ---
+# --- Chat interfeysi ---
+for msg in st.session_state.messages:
+    if msg["role"] == "user":
+        st.markdown(f'<div class="user-box"><b>Siz:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
+    elif msg["role"] == "ai":
+        st.markdown(f'<div class="ai-box"><b>Maktab AI:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
+    elif msg["role"] == "img":
+        st.markdown(f'<div class="ai-box"><b>Maktab AI:</b><br>Rasm tayyor!</div>', unsafe_allow_html=True)
+        st.image(msg["content"], use_container_width=True)
 
-# Eski xabarlarni ko'rsatish
-for message in st.session_state.messages:
-    if message["role"] == "user":
-        st.markdown(f'<div class="user-msg"><b>Siz:</b><br>{message["content"]}</div>', unsafe_allow_html=True)
-    elif message["role"] == "ai":
-        st.markdown(f'<div class="ai-msg"><b>AI:</b><br>{message["content"]}</div>', unsafe_allow_html=True)
-    elif message["role"] == "image":
-        st.markdown(f'<div class="ai-msg"><b>AI (Rasm):</b><br><a href="{message["content"]}" target="_blank">Rasmni ko\'rish uchun bu yerni bosing</a></div>', unsafe_allow_html=True)
-        st.image(message["content"], use_container_width=True)
+# Kiritish maydoni
+input_text = st.text_input("Xabar yozing...", key="user_input")
 
-# Matn kiritish maydoni
-user_input = st.text_input("Savolingizni yoki rasm tarifini yozing...", key="input")
-
-# Tugmalar uchun ustunlar
 col1, col2 = st.columns(2)
 
-# --- Tugmalar bosilgandagi harakatlar ---
-
-# 1. Suhbat tugmasi
-if col1.button("Suhbat 💬") and user_input:
-    # Foydalanuvchi xabarini saqlash
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    st.markdown(f'<div class="user-msg"><b>Siz:</b><br>{user_input}</div>', unsafe_allow_html=True)
+# --- Suhbat Harakati ---
+if col1.button("Suhbat 💬") and input_text:
+    st.session_state.messages.append({"role": "user", "content": input_text})
     
-    with st.spinner("AI o'ylamoqda..."):
-        # AI javobini olish
-        response = asyncio.run(get_ai_response(user_input))
-        st.session_state.messages.append({"role": "ai", "content": response})
-        st.markdown(f'<div class="ai-msg"><b>AI:</b><br>{response}</div>', unsafe_allow_html=True)
-    
-    # Kiritish maydonini tozalash uchun sahifani yangilash
+    with st.spinner("Maktab AI javob qaytarmoqda..."):
+        answer = asyncio.run(get_ai_response(input_text))
+        st.session_state.messages.append({"role": "ai", "content": answer})
     st.rerun()
 
-# 2. Rasm tugmasi
-if col2.button("Rasm 🎨") and user_input:
-    # Foydalanuvchi xabarini saqlash
-    st.session_state.messages.append({"role": "user", "content": f"Rasm: {user_input}"})
-    st.markdown(f'<div class="user-msg"><b>Siz:</b><br>Rasm: {user_input}</div>', unsafe_allow_html=True)
+# --- Rasm Harakati ---
+if col2.button("Rasm 🎨") and input_text:
+    st.session_state.messages.append({"role": "user", "content": f"Rasm chizish: {input_text}"})
     
     with st.spinner("Rasm chizilmoqda..."):
-        # Rasm linkini yaratish
-        image_url = generate_image_url(user_input)
-        st.session_state.messages.append({"role": "image", "content": image_url})
-        st.markdown(f'<div class="ai-msg"><b>AI (Rasm):</b><br><a href="{image_url}" target="_blank">Rasmni ko\'rish uchun bu yerni bosing</a></div>', unsafe_allow_html=True)
-        st.image(image_url, use_container_width=True)
-    
+        img_url = get_image_link(input_text)
+        st.session_state.messages.append({"role": "img", "content": img_url})
     st.rerun()
+
+# Sahifa pastiga tushirish
+st.markdown('<div id="end"></div>', unsafe_allow_html=True)
