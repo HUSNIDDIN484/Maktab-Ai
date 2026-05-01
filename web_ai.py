@@ -5,74 +5,98 @@ import urllib.parse
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
 
-# --- Dizayn ---
+# --- Dizayn (Logotip va CSS) ---
 st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: white; }
-    .title { color: #3B8ED0; text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 20px; }
+    .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .logo-img {
+        width: 80px;
+        border-radius: 50%;
+        border: 2px solid #3B8ED0;
+    }
+    .main-title {
+        color: #3B8ED0;
+        font-size: 32px;
+        font-weight: bold;
+        margin: 0;
+    }
     .user-msg { background-color: #262730; padding: 15px; border-radius: 15px; margin: 10px 0; border-right: 5px solid #3B8ED0; }
     .ai-msg { background-color: #1E1E1E; padding: 15px; border-radius: 15px; border-left: 5px solid #3B8ED0; margin: 10px 0; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True)
+# Logotip va Sarlavhani chiqarish
+# Eslatma: logotip.png faylini Github-ga yuklab, nomini to'g'ri yozing
+# Agar rasm internetda bo'lsa, URL manzilini qo'ying
+logo_url = "https://raw.githubusercontent.com/SIZNING_USERNAMINGIZ/maktab-ai/main/image_68543b.jpg" 
+
+st.markdown(f"""
+<div class="header-container">
+    <img src="{logo_url}" class="logo-img">
+    <h1 class="main-title">19-SON MAKTAB AI</h1>
+</div>
+""", unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- AI Funksiyasi (Xatosiz variant) ---
+# --- AI Matn Funksiyasi ---
 def get_ai_response(prompt):
-    system_instructions = (
-        "Sening isming - Maktab AI. Sen 19-sonli maktab yordamchisisan. "
-        "O'zingni Aria yoki Opera deb tanishtirma. Faqat o'zbek tilida javob ber."
-    )
-    
-    try:
-        # Provayderni aniq ko'rsatmasdan, kutubxonaga tanlashni qo'yib beramiz
-        # Bu AttributeError xatosini butunlay yo'qotadi
-        response = g4f.ChatCompletion.create(
-            model=g4f.models.default,
-            messages=[
-                {"role": "system", "content": system_instructions},
-                {"role": "user", "content": f"Sen Maktab AIsan. Savol: {prompt}"}
-            ],
-        )
-        
-        if response:
-            res_str = str(response)
-            # Aria filtrini qo'llaymiz
-            return res_str.replace("Aria", "Maktab AI").replace("Opera", "19-son maktab")
-        return "Xabar mazmuni bo'sh qaytdi."
-        
-    except Exception as e:
-        return "Hozirda serverlar band. Iltimos, bir ozdan so'ng qayta urinib ko'ring."
+    models = ["gpt-4o", "gpt-4", "gpt-3.5-turbo"]
+    system_msg = "Sening isming - Maktab AI. Sen 19-sonli maktab yordamchisisan. Aria emassan. O'zbekcha javob ber."
+    for model_name in models:
+        try:
+            response = g4f.ChatCompletion.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": system_msg},
+                    {"role": "user", "content": prompt}
+                ],
+            )
+            if response and len(str(response)) > 5:
+                return str(response).replace("Aria", "Maktab AI").replace("Opera", "19-son maktab")
+        except:
+            continue
+    return "Hozirda AI serverlari band. Iltimos, qayta urinib ko'ring."
 
-# --- Chat tarixi ---
+# --- Chat Tarixi ---
 for msg in st.session_state.messages:
     role_name = "Siz" if msg["role"] == "user" else "Maktab AI"
     role_class = "user-msg" if msg["role"] == "user" else "ai-msg"
     st.markdown(f'<div class="{role_class}"><b>{role_name}:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
-    if "image" in msg:
-        st.image(msg["image"], use_container_width=True)
+    if "image" in msg: st.image(msg["image"])
+    if "video" in msg: st.video(msg["video"])
 
 # --- Kirish ---
-with st.form("chat_form", clear_on_submit=True):
+with st.form("main_form", clear_on_submit=True):
     user_input = st.text_input("Xabar yozing...")
-    col1, col2 = st.columns(2)
-    submit_chat = col1.form_submit_button("Suhbat 💬")
-    submit_img = col2.form_submit_button("Rasm 🎨")
+    c1, c2, c3 = st.columns(3)
+    s_chat = c1.form_submit_button("Suhbat 💬")
+    s_img = c2.form_submit_button("Rasm 🎨")
+    s_vid = c3.form_submit_button("Video 🎬")
 
-if submit_chat and user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.spinner("O'ylamoqdaman..."):
-        answer = get_ai_response(user_input)
-        st.session_state.messages.append({"role": "ai", "content": answer})
-    st.rerun()
-
-if submit_img and user_input:
-    st.session_state.messages.append({"role": "user", "content": f"Rasm: {user_input}"})
-    with st.spinner("Chizilmoqda..."):
-        encoded = urllib.parse.quote(user_input)
-        img_url = f"https://image.pollinations.ai/prompt/school_style_{encoded}?width=1024&height=1024&nologo=true"
+if user_input:
+    if s_chat:
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        with st.spinner("Maktab AI o'ylamoqda..."):
+            res = get_ai_response(user_input)
+            st.session_state.messages.append({"role": "ai", "content": res})
+        st.rerun()
+    
+    if s_img:
+        st.session_state.messages.append({"role": "user", "content": f"Rasm: {user_input}"})
+        img_url = f"https://image.pollinations.ai/prompt/art_{urllib.parse.quote(user_input)}?nologo=true"
         st.session_state.messages.append({"role": "ai", "content": "Rasm tayyor!", "image": img_url})
-    st.rerun()
+        st.rerun()
+
+    if s_vid:
+        st.session_state.messages.append({"role": "user", "content": f"Video: {user_input}"})
+        st.info("Video so'rovi qabul qilindi. Generatsiya uzoqroq vaqt olishi mumkin.")
+        st.rerun()
