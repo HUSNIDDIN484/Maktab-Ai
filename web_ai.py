@@ -1,12 +1,12 @@
 import streamlit as st
 from streamlit_google_auth import Authenticate
 
-# 1. Sahifa sozlamalari (Buni eng tepada yozish shart)
+# Sahifa sozlamalari
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🤖")
 
-# 2. Google Auth sozlamalarini secrets.toml dan yuklash
+# Google Auth ni sozlash
 auth = Authenticate(
-    secret_credentials_path=None, 
+    secret_credentials_path=None,
     cookie_name='maktab_ai_auth',
     cookie_key=st.secrets["auth"]["cookie_secret"],
     client_id=st.secrets["auth"]["client_id"],
@@ -14,44 +14,42 @@ auth = Authenticate(
     redirect_uri=st.secrets["auth"]["redirect_uri"],
 )
 
-# 3. Foydalanuvchi holatini tekshirish
+# Avtomatik tekshirish
 auth.check_authenticity()
 
-# 4. Agar foydalanuvchi kirmagan bo'lsa
+# Login holatini tekshirish
 if not st.session_state.get('connected'):
     st.markdown("<h1 style='text-align: center;'>19-son Maktab AI</h1>", unsafe_allow_html=True)
-    st.info("Tizimdan foydalanish uchun Google hisobingiz orqali kiring.")
-    
-    # Login tugmasi
+    st.warning("Ilovadan foydalanish uchun Google hisobingiz orqali kirishingiz shart.")
     auth.login()
-    st.stop()  # Pastdagi AI kodlarini ishga tushirishni to'xtatadi
+    st.stop()
 
-# --- BU YERDAN KEYIN FAQAT TIZIMGA KIRGANLAR UCHUN ---
+# --- TIZIMGA KIRILGANDA KO'RINADIGAN QISM ---
+user = st.session_state.get('user_info', {})
+st.sidebar.image(user.get('picture'), width=80)
+st.sidebar.success(f"Salom, {user.get('name')}!")
 
-# Sidebar - Foydalanuvchi ma'lumotlari va Chiqish tugmasi
-user_info = st.session_state.get('user_info', {})
-st.sidebar.image(user_info.get('picture'), width=100)
-st.sidebar.write(f"Siz kirdingiz: **{user_info.get('name')}**")
-
-if st.sidebar.button("Tizimdan chiqish"):
+if st.sidebar.button("Chiqish"):
     auth.logout()
     st.rerun()
 
-# --- SIZNING ASOSIY AI KODINGIZ ---
+# Asosiy AI qismi
 st.title("🤖 Maktab AI Yordamchisi")
+st.info("Siz muvaffaqiyatli tizimga kirdingiz. Endi savol berishingiz mumkin.")
 
-# Masalan, Chat qismi:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-if prompt := st.chat_input("Savolingizni yozing..."):
+if prompt := st.chat_input("Qanday yordam bera olaman?"):
+    st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
     
     with st.chat_message("assistant"):
-        response = "Assalomu alaykum! Men 19-son maktab AI yordamchisiman. Hozircha login tizimini test qilyapmiz."
-        st.markdown(response)
+        res = "Men 19-son maktab uchun maxsus tayyorlangan AI yordamchisiman."
+        st.markdown(res)
+    st.session_state.messages.append({"role": "assistant", "content": res})
