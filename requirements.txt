@@ -1,2 +1,4 @@
-streamlit
+streamlit==1.32.0
 g4f==0.3.1.2
+curl_cffi==0.6.2
+nest_asyncio
