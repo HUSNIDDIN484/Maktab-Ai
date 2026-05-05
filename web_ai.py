@@ -1,39 +1,32 @@
 import streamlit as st
 import g4f
 
-# Sahifa sozlamalari
-st.set_page_config(page_title="19-son Maktab AI", page_icon="🤖")
+# Sarlavha
+st.title("🤖 Maktab AI")
 
-st.title("🤖 19-son Maktab AI")
-st.write("Xush kelibsiz! Savolingizni pastga yozishingiz mumkin.")
-
-# Chat tarixini saqlash uchun xotira
+# Xabarlar xotirasi
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Avvalgi yozishmalarni ekranga chiqarish
+# Tarixni ko'rsatish
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+        st.write(message["content"])
 
-# Foydalanuvchi xabarini qabul qilish
-if prompt := st.chat_input("Qanday yordam bera olaman?"):
-    # Foydalanuvchi xabarini xotiraga qo'shish
+# Savol kiritish
+if prompt := st.chat_input("Savolingizni yozing..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.write(prompt)
 
-    # AI javobini generatsiya qilish
+    # AI javobi
     with st.chat_message("assistant"):
         try:
             response = g4f.ChatCompletion.create(
                 model=g4f.models.gpt_4,
                 messages=[{"role": "user", "content": prompt}],
             )
-            if response:
-                st.markdown(response)
-                st.session_state.messages.append({"role": "assistant", "content": response})
-            else:
-                st.error("AI hozircha javob bera olmadi, iltimos qaytadan urinib ko'ring.")
+            st.write(response)
+            st.session_state.messages.append({"role": "assistant", "content": response})
         except Exception as e:
-            st.error(f"Xatolik yuz berdi: {e}")
+            st.error("Ulanishda xato bo'ldi, qaytadan urinib ko'ring.")
