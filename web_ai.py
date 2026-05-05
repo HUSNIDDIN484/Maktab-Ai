@@ -6,10 +6,11 @@ import g4f
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🤖")
 
 # Avtentifikatsiya sozlamalari
-# Xatolikni oldini olish uchun argumentlarni aniq nomlari bilan yozamiz
+# Rasmda (image_1efc19.png) ko'ringan xatolikni bartaraf etish uchun
+# cookie_key va cookie_name kabi parametrlar aniq ko'rsatildi
 auth = Authenticate(
     secret_credentials_path=None,
-    cookie_name="maktab_ai_session",
+    cookie_name="maktab_ai_auth_session",
     cookie_key=st.secrets["auth"]["cookie_secret"],
     client_id=st.secrets["auth"]["client_id"],
     client_secret=st.secrets["auth"]["client_secret"],
@@ -27,11 +28,10 @@ if st.session_state.get("connected"):
     if st.sidebar.button("Chiqish"):
         auth.logout()
 
-    # Asosiy sahifa
+    # Asosiy interfeys
     st.title("🤖 19-son Maktab AI")
     st.info("Yangiariq tumani, 19-son maktab yordamchisi.")
 
-    # Chat
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -53,7 +53,7 @@ if st.session_state.get("connected"):
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
             except Exception as e:
-                st.error(f"Xatolik: {e}")
+                st.error(f"AI xatoligi: {e}")
 else:
     st.title("🔐 Kirish")
     st.warning("Ilovadan foydalanish uchun Google orqali kiring.")
