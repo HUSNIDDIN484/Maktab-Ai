@@ -5,17 +5,16 @@ import g4f
 # Sahifa sozlamalari
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🤖")
 
-# Avtentifikatsiya (image_1dbd83.png dagi xatoni tuzatish)
-# Faqat kutubxona uchun shart bo'lgan argumentlarni qoldiramiz
+# Avtentifikatsiya (image_1db564.png dagi xatoni tuzatish)
 auth = Authenticate(
-    cookie_name="maktab_ai_auth",
+    cookie_name="maktab_ai_session",
     cookie_key=st.secrets["auth"]["cookie_secret"],
     client_id=st.secrets["auth"]["client_id"],
     client_secret=st.secrets["auth"]["client_secret"],
     redirect_uri="https://maktab-ai.streamlit.app/oauth2callback"
 )
 
-# Login holatini tekshirish
+# Avtentifikatsiyani tekshirish
 auth.check_authenticity()
 
 if st.session_state.get("connected"):
@@ -48,6 +47,6 @@ if st.session_state.get("connected"):
             except Exception as e:
                 st.error(f"Xatolik: {e}")
 else:
-    st.title("🔐 Kirish")
+    st.title("🔑 Kirish")
     st.info("Ilovadan foydalanish uchun Google orqali kiring.")
     auth.login()
