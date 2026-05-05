@@ -5,7 +5,8 @@ import g4f
 # Sahifa sozlamalari
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🤖")
 
-# Avtentifikatsiya (image_1e25df.png dagi xatoni tuzatish)
+# Avtentifikatsiya (image_1dbd83.png dagi xatoni tuzatish)
+# Faqat kutubxona uchun shart bo'lgan argumentlarni qoldiramiz
 auth = Authenticate(
     cookie_name="maktab_ai_auth",
     cookie_key=st.secrets["auth"]["cookie_secret"],
@@ -47,6 +48,6 @@ if st.session_state.get("connected"):
             except Exception as e:
                 st.error(f"Xatolik: {e}")
 else:
-    st.title("🔑 Kirish")
+    st.title("🔐 Kirish")
     st.info("Ilovadan foydalanish uchun Google orqali kiring.")
     auth.login()
