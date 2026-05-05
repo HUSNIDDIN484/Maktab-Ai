@@ -6,10 +6,10 @@ import g4f
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🤖")
 
 # Avtentifikatsiya sozlamalari
-# Xatolikni bartaraf etish uchun argument nomlarini kutubxonaga moslab yozamiz
+# Xatolikni bartaraf etish uchun argument nomlarini aniq yozamiz
 auth = Authenticate(
     secret_credentials_path=None,
-    cookie_name="maktab_ai_session",
+    cookie_name="maktab_ai_auth",
     cookie_key=st.secrets["auth"]["cookie_secret"],
     client_id=st.secrets["auth"]["client_id"],
     client_secret=st.secrets["auth"]["client_secret"],
@@ -54,7 +54,6 @@ if st.session_state.get("connected"):
             except Exception as e:
                 st.error(f"Xatolik: {e}")
 else:
-    # Tizimga kirmaganlar uchun
     st.title("🔐 Kirish")
     st.warning("Ilovadan foydalanish uchun Google orqali kiring.")
     auth.login()
