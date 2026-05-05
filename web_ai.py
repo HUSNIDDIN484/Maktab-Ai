@@ -5,7 +5,7 @@ import g4f
 # Sahifa sozlamalari
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🤖")
 
-# Avtentifikatsiya (2.0.0 versiyasi uchun)
+# Avtentifikatsiya (image_1da75b.png xatosini chetlab o'tish uchun)
 auth = Authenticate(
     cookie_name="maktab_ai_session",
     cookie_key=st.secrets["auth"]["cookie_secret"],
@@ -14,16 +14,17 @@ auth = Authenticate(
     redirect_uri="https://maktab-ai.streamlit.app/oauth2callback"
 )
 
-# Holatni tekshirish
+# Foydalanuvchi holatini tekshirish
 auth.check_authenticity()
 
 if st.session_state.get("connected"):
-    st.sidebar.write(f"Siz kirdingiz: {st.session_state.get('name')}")
-    if st.sidebar.button("Chiqish"):
+    st.sidebar.write(f"Foydalanuvchi: {st.session_state.get('name')}")
+    if st.sidebar.button("Tizimdan chiqish"):
         auth.logout()
 
     st.title("🤖 19-son Maktab AI")
-    
+    st.info("Savolingizga javob berishga tayyorman.")
+
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -31,7 +32,7 @@ if st.session_state.get("connected"):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    if prompt := st.chat_input("Qanday yordam kerak?"):
+    if prompt := st.chat_input("Nima haqida so'ramoqchisiz?"):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -48,5 +49,5 @@ if st.session_state.get("connected"):
                 st.error(f"Xatolik: {e}")
 else:
     st.title("🔐 Kirish")
-    st.info("Ilovadan foydalanish uchun Google orqali tizimga kiring.")
+    st.warning("Ilovadan foydalanish uchun Google orqali kiring.")
     auth.login()
