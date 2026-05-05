@@ -2,4 +2,3 @@ streamlit
 streamlit-google-auth
 g4f
 curl_cffi
-requests
