@@ -1,4 +1,4 @@
 streamlit
-streamlit-google-auth
+streamlit-google-auth==2.0.0
 g4f
 curl_cffi
