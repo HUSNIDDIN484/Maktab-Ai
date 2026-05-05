@@ -6,10 +6,10 @@ import g4f
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🤖")
 
 # Avtentifikatsiya sozlamalari
-# Xatolikni bartaraf etish uchun argument nomlarini aniq yozamiz
+# Xatolikni bartaraf etish uchun argument nomlarini kutubxonaga moslab yozamiz
 auth = Authenticate(
     secret_credentials_path=None,
-    cookie_name="maktab_ai_auth",
+    cookie_name="maktab_ai_session",
     cookie_key=st.secrets["auth"]["cookie_secret"],
     client_id=st.secrets["auth"]["client_id"],
     client_secret=st.secrets["auth"]["client_secret"],
@@ -20,7 +20,7 @@ auth = Authenticate(
 auth.check_authenticity()
 
 if st.session_state.get("connected"):
-    # Sidebar interfeysi
+    # Tizimga kirgan foydalanuvchi interfeysi
     st.sidebar.image("https://raw.githubusercontent.com/husniddin484/maktab-ai/main/logo.png", width=100)
     st.sidebar.write(f"Xush kelibsiz, {st.session_state.get('name', 'Foydalanuvchi')}!")
     
@@ -28,8 +28,9 @@ if st.session_state.get("connected"):
         auth.logout()
 
     st.title("🤖 19-son Maktab AI")
-    
-    # Chat xotirasi
+    st.info("Yangiariq tumani, 19-son maktab yordamchisi.")
+
+    # Chat interfeysi
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -53,6 +54,7 @@ if st.session_state.get("connected"):
             except Exception as e:
                 st.error(f"Xatolik: {e}")
 else:
+    # Tizimga kirmaganlar uchun
     st.title("🔐 Kirish")
     st.warning("Ilovadan foydalanish uchun Google orqali kiring.")
     auth.login()
