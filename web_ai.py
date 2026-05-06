@@ -4,7 +4,7 @@ import urllib.parse
 import asyncio
 import nest_asyncio
 
-# Streamlit-da asinxron loop xatolarini (Oh no!) tuzatish
+# Streamlit-da "Oh no" xatosini keltirib chiqaruvchi loop muammosini tuzatish
 nest_asyncio.apply()
 
 # --- Sahifa sozlamalari ---
@@ -33,25 +33,22 @@ if "messages" not in st.session_state:
 
 # --- AI Javob Funksiyasi ---
 async def fetch_ai_response(prompt):
-    # MAKTABNING BARCHA MA'LUMOTLARI SHU YERDA
+    # MAKTAB MA'LUMOTLARI
     system_instructions = (
         "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktabning rasmiy AI yordamchisisan. "
-        "Maktab ma'lumotlarini har doim eslab qol va so'ralganda aniq javob ber: "
-        "\n1. Direktor: ESHMETOV RUSTAMBAY OLLABERGANOVICH."
-        "\n2. Administrator (ma'muriyat): SABIROVA IRODA YARASH QIZI."
-        "\n3. Direktor o'rinbosarlari: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek."
-        "\n4. Aloqa uchun asosiy telefon: +998975156307."
-        "\n5. Maktab manzili: Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi, Charog'bon ko'chasi 2-uy."
-        "\n6. Kontingent: 570 o'quvchi va 65 o'qituvchi."
-        "\n7. Tashkil etilgan sana: 1982-yil 2-sentyabr."
+        "Ma'lumotlar: "
+        "\n- Direktor: ESHMETOV RUSTAMBAY OLLABERGANOVICH."
+        "\n- Administrator: SABIROVA IRODA YARASH QIZI."
+        "\n- Direktor o'rinbosarlari: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek."
+        "\n- Telefon: +998975156307."
+        "\n- Manzil: Qo'riqtom qishlog'i, Po'rsang mahallasi, Charog'bon ko'chasi 2-uy."
+        "\n- Maktab 1982-yil 2-sentyabrda ochilgan."
         "\n\nQoidalar: "
-        "- O'zingni Aria yoki Opera deb tanishtirma, faqat 'Maktab AI' deb tanishtir."
-        "- Tillarni aralashtirma, faqat toza O'zbek tilida javob ber."
-        "- Ma'lumotlarni aniq va chiroyli formatda taqdim et."
+        "- Faqat o'zbek tilida javob ber. "
+        "- O'zingni Aria yoki Opera deb tanishtirma."
     )
 
     try:
-        # Eng barqaror provayderlar
         response = await g4f.ChatCompletion.create_async(
             model=g4f.models.default,
             messages=[
@@ -60,11 +57,9 @@ async def fetch_ai_response(prompt):
             ],
         )
         if response:
-            res_str = str(response)
-            # Keraksiz nomlarni almashtirish
-            return res_str.replace("Aria", "Maktab AI").replace("Opera", "19-son maktab")
-    except:
-        return "Hozirda serverlarda yuklama yuqori. Iltimos, bir ozdan so'ng qayta urinib ko'ring."
+            return str(response).replace("Aria", "Maktab AI").replace("Opera", "19-son maktab")
+    except Exception as e:
+        return f"Xatolik: Server hozirda band."
 
 # --- Chat tarixini ko'rsatish ---
 for msg in st.session_state.messages:
@@ -74,7 +69,7 @@ for msg in st.session_state.messages:
     if "image" in msg:
         st.image(msg["image"], use_container_width=True)
 
-# --- Kirish maydoni ---
+# --- Kiritish maydoni ---
 with st.form("chat_form", clear_on_submit=True):
     user_input = st.text_input("Savol yozing yoki rasm tarifini bering...")
     col1, col2 = st.columns(2)
@@ -93,13 +88,9 @@ if submit_chat and user_input:
 
 # --- Rasm logikasi ---
 if submit_img and user_input:
-    st.session_state.messages.append({"role": "user", "content": f"Rasm tarifi: {user_input}"})
+    st.session_state.messages.append({"role": "user", "content": f"Rasm: {user_input}"})
     with st.spinner("Rasm tayyorlanmoqda..."):
-        encoded_prompt = urllib.parse.quote(user_input)
-        img_url = f"https://image.pollinations.ai/prompt/school_art_{encoded_prompt}?width=1024&height=1024&nologo=true"
-        st.session_state.messages.append({
-            "role": "ai", 
-            "content": f"'{user_input}' asosida rasm tayyorlandi:", 
-            "image": img_url
-        })
+        encoded = urllib.parse.quote(user_input)
+        img_url = f"https://image.pollinations.ai/prompt/artistic_{encoded}?width=1024&height=1024&nologo=true"
+        st.session_state.messages.append({"role": "ai", "content": "Tayyor!", "image": img_url})
     st.rerun()
