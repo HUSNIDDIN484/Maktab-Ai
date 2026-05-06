@@ -4,7 +4,7 @@ import urllib.parse
 import asyncio
 import nest_asyncio
 
-# Streamlit ichida asinxron loop xatolarini oldini olish
+# Streamlit ichida asinxron loop xatoliklarini bartaraf etish
 nest_asyncio.apply()
 
 # --- Sahifa sozlamalari ---
@@ -29,19 +29,19 @@ if "messages" not in st.session_state:
 # --- Asinxron AI funksiyasi ---
 async def get_response(prompt):
     try:
-        # AI-ga maktab haqidagi barcha ma'lumotlar berildi
+        # Maktab haqidagi ma'lumotlar AI bazasiga yuklandi
         sys_prompt = """
         Sen Xorazm viloyati, Yangiariq tumanidagi 19-sonli umumiy o'rta ta'lim maktabining maxsus AI yordamchisisan.
-        Maktab haqida ma'lumotlar:
+        Maktab ma'lumotlari:
         - Manzil: Qo'riqtom qishlog'i, Po'rsang mahallasi, Charog'bon ko'chasi 2-uy.
         - Tashkil etilgan sana: 02/09/1982.
         - O'quvchilar soni: 570 ta, O'qituvchilar soni: 65 ta.
         - Direktor: ESHMETOV RUSTAMBAY OLLABERGANOVICH.
         - Direktor o'rinbosarlari: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek.
         - Aloqa: +998975156307.
-        - Boshqaruvchi tashkilot: Xorazm viloyati MMTB.
-
-        Senga kimliging yoki maktab haqida savol berilsa, ushbu ma'lumotlar asosida o'zbek tilida aniq javob ber.
+        - Boshqaruvchi: Xorazm viloyati MMTB.
+        
+        Kimsan yoki maktab haqida so'ralganda faqat o'zbek tilida shu ma'lumotlar asosida javob ber.
         """
         response = await g4f.ChatCompletion.create_async(
             model=g4f.models.default,
@@ -52,22 +52,23 @@ async def get_response(prompt):
         )
         return response
     except Exception as e:
-        return f"Xatolik: {str(e)}"
+        return f"Xatolik yuz berdi: {str(e)}"
 
-# --- Tarixni ko'rsatish ---
+# --- Suhbat tarixini chiqarish ---
 for m in st.session_state.messages:
     cls = "user" if m["role"] == "user" else "ai"
     st.markdown(f'<div class="msg {cls}"><b>{m["role"].upper()}:</b><br>{m["content"]}</div>', unsafe_allow_html=True)
     if "img" in m:
         st.image(m["img"])
 
-# --- Kirish va Tugmalar ---
+# --- Kirish maydoni ---
 user_input = st.text_input("Savolingizni yozing...", key="main_input")
 col1, col2 = st.columns(2)
 
 if col1.button("Suhbat 💬") and user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.spinner("AI o'ylamoqda..."):
+        # Yangi event loop orqali xatolikni cheklab o'tish
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         res = loop.run_until_complete(get_response(user_input))
