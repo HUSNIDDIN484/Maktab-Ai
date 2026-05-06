@@ -4,79 +4,82 @@ import urllib.parse
 import asyncio
 import nest_asyncio
 
-# Streamlit ichida asinxron loop xatoliklarini bartaraf etish
-nest_asyncio.apply()
+# Streamlit asinxron xatolarini cheklab o'tish
+try:
+    nest_asyncio.apply()
+except:
+    pass
 
 # --- Sahifa sozlamalari ---
-st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
+st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫", layout="centered")
 
-# --- Dizayn (CSS) ---
+# --- Dizayn sozlamalari ---
 st.markdown("""
 <style>
-    .stApp { background-color: #121212; color: white; }
-    .big-font { font-size: 25px !important; font-weight: bold; color: #3B8ED0; text-align: center; }
-    .msg { padding: 12px; border-radius: 10px; margin-bottom: 10px; }
-    .user { background-color: #262730; border: 1px solid #444; }
-    .ai { background-color: #1E1E1E; border-left: 5px solid #3B8ED0; }
+    .stApp { background-color: #0E1117; color: #FFFFFF; }
+    .main-title { font-size: 28px; font-weight: bold; color: #4A90E2; text-align: center; margin-bottom: 20px; }
+    .chat-bubble { padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #30363D; }
+    .user-msg { background-color: #161B22; }
+    .ai-msg { background-color: #21262D; border-left: 5px solid #4A90E2; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<p class="big-font">🏫 19-SON MAKTAB AI YORDAMCHISI</p>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">🏫 19-SON MAKTAB AI YORDAMCHISI</div>', unsafe_allow_html=True)
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-# --- Asinxron AI funksiyasi ---
-async def get_response(prompt):
+# --- AI miyasiga yuklangan ma'lumotlar ---
+async def fetch_ai_response(user_query):
     try:
-        # Maktab haqidagi ma'lumotlar AI bazasiga yuklandi
-        sys_prompt = """
-        Sen Xorazm viloyati, Yangiariq tumanidagi 19-sonli umumiy o'rta ta'lim maktabining maxsus AI yordamchisisan.
-        Maktab ma'lumotlari:
+        system_instructions = """
+        Sen Xorazm viloyati, Yangiariq tumanidagi 19-sonli umumiy o'rta ta'lim maktabining rasmiy AI yordamchisisan.
+        Maktab pasporti:
+        - Nomi: 19-sonli umumiy o'rta ta'lim maktabi.
         - Manzil: Qo'riqtom qishlog'i, Po'rsang mahallasi, Charog'bon ko'chasi 2-uy.
-        - Tashkil etilgan sana: 02/09/1982.
-        - O'quvchilar soni: 570 ta, O'qituvchilar soni: 65 ta.
+        - Tashkil topgan: 02.09.1982.
+        - Kontingent: 570 o'quvchi va 65 o'qituvchi.
         - Direktor: ESHMETOV RUSTAMBAY OLLABERGANOVICH.
-        - Direktor o'rinbosarlari: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek.
+        - Rahbariyat: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek (Direktor o'rinbosarlari).
         - Aloqa: +998975156307.
-        - Boshqaruvchi: Xorazm viloyati MMTB.
+        - Yuqori tashkilot: Xorazm viloyati MMTB.
         
-        Kimsan yoki maktab haqida so'ralganda faqat o'zbek tilida shu ma'lumotlar asosida javob ber.
+        Qoidalar: Har doim o'zbek tilida, muloyim va aniq javob ber. Kimsan desa, maktab yordamchisi ekaningni ayt.
         """
+        
         response = await g4f.ChatCompletion.create_async(
             model=g4f.models.default,
             messages=[
-                {"role": "system", "content": sys_prompt},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": user_query}
             ]
         )
         return response
     except Exception as e:
-        return f"Xatolik yuz berdi: {str(e)}"
+        return f"Ulanishda xatolik: {str(e)}"
 
-# --- Suhbat tarixini chiqarish ---
-for m in st.session_state.messages:
-    cls = "user" if m["role"] == "user" else "ai"
-    st.markdown(f'<div class="msg {cls}"><b>{m["role"].upper()}:</b><br>{m["content"]}</div>', unsafe_allow_html=True)
-    if "img" in m:
-        st.image(m["img"])
+# --- Suhbat oynasi ---
+for chat in st.session_state.chat_history:
+    style_class = "user-msg" if chat["role"] == "user" else "ai-msg"
+    st.markdown(f'<div class="chat-bubble {style_class}"><b>{chat["role"].upper()}:</b><br>{chat["content"]}</div>', unsafe_allow_html=True)
+    if "image" in chat:
+        st.image(chat["image"])
 
-# --- Kirish maydoni ---
-user_input = st.text_input("Savolingizni yozing...", key="main_input")
-col1, col2 = st.columns(2)
+# --- Buyruqlar paneli ---
+query = st.text_input("Savolingizni bu yerga yozing...", key="user_input")
+btn_col1, btn_col2 = st.columns(2)
 
-if col1.button("Suhbat 💬") and user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.spinner("AI o'ylamoqda..."):
-        # Yangi event loop orqali xatolikni cheklab o'tish
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        res = loop.run_until_complete(get_response(user_input))
-        st.session_state.messages.append({"role": "ai", "content": res})
+if btn_col1.button("Yuborish 📩") and query:
+    st.session_state.chat_history.append({"role": "user", "content": query})
+    with st.spinner("AI javob tayyorlamoqda..."):
+        new_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(new_loop)
+        ai_reply = new_loop.run_until_complete(fetch_ai_response(query))
+        st.session_state.chat_history.append({"role": "ai", "content": ai_reply})
     st.rerun()
 
-if col2.button("Rasm 🎨") and user_input:
-    st.session_state.messages.append({"role": "user", "content": f"Rasm: {user_input}"})
-    img_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(user_input)}?width=1024&height=1024&nologo=true"
-    st.session_state.messages.append({"role": "ai", "content": "Mana siz so'ragan rasm:", "img": img_url})
+if btn_col2.button("Rasm yaratish 🖼️") and query:
+    st.session_state.chat_history.append({"role": "user", "content": f"Rasm: {query}"})
+    img_link = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(query)}?width=1024&height=1024&nologo=true"
+    st.session_state.chat_history.append({"role": "ai", "content": "Siz so'ragan tasvir:", "image": img_link})
     st.rerun()
