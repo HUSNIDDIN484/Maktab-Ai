@@ -1,11 +1,6 @@
 import streamlit as st
 import g4f
 import urllib.parse
-import asyncio
-import nest_asyncio
-
-# Streamlit muhitida asinxron loop xatoliklarini bartaraf etish
-nest_asyncio.apply()
 
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
@@ -25,30 +20,25 @@ st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- AI Funksiyasi (Barcha ma'lumotlar yuklangan) ---
+# --- AI Funksiyasi (Ma'lumotlar yuklangan variant) ---
 def get_ai_response(prompt):
-    # MAKTAB MA'LUMOTLARI VA MA'MURIYAT:
+    # MAKTAB MA'LUMOTLARI SHU YERGA JOYLANDI:
     system_instructions = (
         "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktabning rasmiy AI yordamchisisan. "
-        "Maktab haqida aniq ma'lumotlar: "
-        "- Manzil: Po'rsang mahallasi, Charog'bon ko'chasi 2-uy. "
-        "- Tashkil etilgan sana: 02.09.1982. "
+        "Maktab haqida muhim ma'lumotlar: "
+        "- Manzil: Qo'riqtom qishlog'i, Po'rsang mahallasi, Charog'bon ko'chasi 2-uy. "
+        "- Tashkil etilgan sana: 02/09/1982. "
         "- Direktor: ESHMETOV RUSTAMBAY OLLABERGANOVICH. "
-        "- Administrator (Ma'muriyat): SABIROVA IRODA YARASH QIZI. "
         "- Direktor o'rinbosarlari: Bekchanov Arslon Kadamboyevich, JALILOV ELBEK UMAROVICH, Salayev Mavlyanbek Shomurotovich. "
-        "- Boshqaruv xodimi: Xo'jayeva Dilorom Otanazarovna. "
-        "- Kontingent: 570 nafar o'quvchi va 65 nafar o'qituvchi. "
-        "- Aloqa uchun telefon: +998975156307. "
-        "- Yuqori tashkilot: Xorazm viloyati MMTB. "
-        "Seni 19-son maktab jamoasi yaratgan. O'zingni Aria yoki Opera deb tanishtirma. "
-        "Kimsan deb so'rashsa yoki maktab haqida so'rashsa, ushbu ma'lumotlar asosida faqat o'zbek tilida javob ber."
+        "- Administratorlar (Ma'muriyat): SABIROVA IRODA YARASH QIZI, Salayev Mavlyanbek Shomurotovich, ESHMETOV RUSTAMBAY OLLABERGANOVICH, Bekchanov Arslon Kadamboyevich. "
+        "- O'qituvchi va boshqaruv xodimi: Xo'jayeva Dilorom Otanazarovna. "
+        "- Maktab kontingenti: 570 nafar o'quvchi va 65 nafar o'qituvchi. "
+        "- Aloqa telefonlari: +998975156307. "
+        "- Boshqaruvchi tashkilot: Xorazm MMTB | Xorezmskaya OblUDSHO. "
+        "Seni 19-son maktab jamoasi yaratgan. O'zingni Aria yoki Opera deb tanishtirma. Faqat o'zbek tilida javob ber."
     )
     
     try:
-        # Streamlit uchun asinxron chaqiruvni muvofiqlashtirish
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
         response = g4f.ChatCompletion.create(
             model=g4f.models.default,
             messages=[
