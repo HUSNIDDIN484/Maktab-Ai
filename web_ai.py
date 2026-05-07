@@ -1,6 +1,11 @@
 import streamlit as st
 import g4f
 import urllib.parse
+import asyncio
+import nest_asyncio
+
+# Streamlit muhitida asinxron loop xatoliklarini bartaraf etish
+nest_asyncio.apply()
 
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
@@ -20,22 +25,30 @@ st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- AI Funksiyasi (Ma'lumotlar yuklangan variant) ---
+# --- AI Funksiyasi (Barcha ma'lumotlar yuklangan) ---
 def get_ai_response(prompt):
-    # MAKTAB MA'LUMOTLARI SHU YERGA JOYLANDI:
+    # MAKTAB MA'LUMOTLARI VA MA'MURIYAT:
     system_instructions = (
         "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktabning rasmiy AI yordamchisisan. "
-        "Maktab haqida muhim ma'lumotlar: "
+        "Maktab haqida aniq ma'lumotlar: "
         "- Manzil: Po'rsang mahallasi, Charog'bon ko'chasi 2-uy. "
-        "- Tashkil etilgan sana: 1982-yil 2-sentyabr. "
+        "- Tashkil etilgan sana: 02.09.1982. "
         "- Direktor: ESHMETOV RUSTAMBAY OLLABERGANOVICH. "
-        "- Direktor o'rinbosarlari: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek. "
-        "- Maktab kontingenti: 570 nafar o'quvchi va 65 nafar o'qituvchi. "
-        "- Yuqori tashkilot: Xorazm viloyati Maktabgacha va maktab ta'limi boshqarmasi. "
-        "Seni 19-son maktab jamoasi yaratgan. O'zingni Aria yoki Opera deb tanishtirma. Faqat o'zbek tilida javob ber."
+        "- Administrator (Ma'muriyat): SABIROVA IRODA YARASH QIZI. "
+        "- Direktor o'rinbosarlari: Bekchanov Arslon Kadamboyevich, JALILOV ELBEK UMAROVICH, Salayev Mavlyanbek Shomurotovich. "
+        "- Boshqaruv xodimi: Xo'jayeva Dilorom Otanazarovna. "
+        "- Kontingent: 570 nafar o'quvchi va 65 nafar o'qituvchi. "
+        "- Aloqa uchun telefon: +998975156307. "
+        "- Yuqori tashkilot: Xorazm viloyati MMTB. "
+        "Seni 19-son maktab jamoasi yaratgan. O'zingni Aria yoki Opera deb tanishtirma. "
+        "Kimsan deb so'rashsa yoki maktab haqida so'rashsa, ushbu ma'lumotlar asosida faqat o'zbek tilida javob ber."
     )
     
     try:
+        # Streamlit uchun asinxron chaqiruvni muvofiqlashtirish
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
         response = g4f.ChatCompletion.create(
             model=g4f.models.default,
             messages=[
