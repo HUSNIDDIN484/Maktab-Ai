@@ -20,22 +20,32 @@ st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- AI Funksiyasi (Ma'lumotlar yuklangan variant) ---
+# --- AI Funksiyasi (Barcha 65 nafar xodim yuklangan variant) ---
 def get_ai_response(prompt):
-    # MAKTAB MA'LUMOTLARI SHU YERGA JOYLANDI:
     system_instructions = (
-        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktabning rasmiy AI yordamchisisan. "
-        "Maktab haqida muhim ma'lumotlar: "
-        "- Manzil: Qo'riqtom qishlog'i, Po'rsang mahallasi, Charog'bon ko'chasi 2-uy. "
-        "- Tashkil etilgan sana: 02/09/1982. "
-        "- Direktor: ESHMETOV RUSTAMBAY OLLABERGANOVICH. "
-        "- Direktor o'rinbosarlari: Bekchanov Arslon Kadamboyevich, JALILOV ELBEK UMAROVICH, Salayev Mavlyanbek Shomurotovich. "
-        "- Administratorlar (Ma'muriyat): SABIROVA IRODA YARASH QIZI, Salayev Mavlyanbek Shomurotovich, ESHMETOV RUSTAMBAY OLLABERGANOVICH, Bekchanov Arslon Kadamboyevich. "
-        "- O'qituvchi va boshqaruv xodimi: Xo'jayeva Dilorom Otanazarovna. "
-        "- Maktab kontingenti: 570 nafar o'quvchi va 65 nafar o'qituvchi. "
-        "- Aloqa telefonlari: +998975156307. "
-        "- Boshqaruvchi tashkilot: Xorazm MMTB | Xorezmskaya OblUDSHO. "
-        "Seni 19-son maktab jamoasi yaratgan. O'zingni Aria yoki Opera deb tanishtirma. Faqat o'zbek tilida javob ber."
+        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
+        "Faqat o'qituvchilar haqida so'ralganda ushbu ma'lumotlardan foydalan: "
+        "\n--- RAHBARIYAT VA MA'MURIYAT ---"
+        "\n- Direktor: ESHMETOV RUSTAMBAY OLLABERGANOVICH."
+        "\n- Direktor o'rinbosarlari: Bekchanov Arslon Kadamboyevich, JALILOV ELBEK UMAROVICH, Salayev Mavlyanbek Shomurotovich."
+        "\n- Administrator: Sabirova Iroda Yarash qizi."
+        "\n- Boshqaruv xodimi va psixologlar: Xo'jayeva Dilorom Otanazarovna, Xudaynazarova Dilbar Yuldoshevna."
+        "\n--- FAN O'QITUVCHILARI ---"
+        "\n- Tarix: Allanazarova Zumrad Xo'janazarovna, MATQURBONOVA SHOHINA G‘ULOMJON QIZI, Matchanova Zebo Ozodovna, SOBIROVA GULPOSHSHA ERGASH QIZI."
+        "\n- Fizika: Aminova Mehriniso Qosim qizi, Kurbonov Ollashukur Otajon o'g'li."
+        "\n- Matematika: Egamova Rajabgul Azamat qizi, Iskandarova Dilnavoz Ro'zmatovna, Matkarimova Muxabbat Axmedovna, Quramboyeva O`g`iljon Xolmurod qizi, Xudaynazarova Ziyoda Xakimboy Qizi."
+        "\n- Ona tili va Adabiyot: Avazova Risolat Samandarovna, Bobojonova Mushtariy Umidbek Qizi, Jumaniyozova Sadoqat Xudayzarovna, Otajonova Sharofat Shakirovna, Xudoynazarova Nafosat Sotimboyevna."
+        "\n- Biologiya, Kimyo va Geografiya: Annazarova Dildora Rustamboyevna (Biologiya), Razzaqova Kumushoy Yusufbay qizi (Kimyo), Qurbanova Farida Kupalboyevna (Geografiya)."
+        "\n- Ingliz tili: Eshmurodova Ra'no Ozod qizi, Farxodova Muxtaram Yarashboy Qizi, Qo'shoqova Gulasal Yo'ldoshevna, Rajabova Lobar Qadirberganovna, Raxmanova So'najon Otabekovna, Sadullayeva Durdona Nuraddin qizi."
+        "\n- Rus tili: Bekmetova Shaxnoza Saparboyevna, BOBOJONOVA KOMILA SANJARBEKOVNA, Meylibayeva Aziza To'xtasin qizi, Saidova Saragul O'rinboyevna, SOBIROVA NOZIMA DILMUROD QIZI, Tillayeva Aziza Ikrom qizi, Yusupova Sanobar Axmedovna."
+        "\n- Fransuz tili: Kurbonova Nigora Matyoqubovna."
+        "\n- Boshlang'ich ta'lim: Bobojonova Elmira Quronboyevna, Bobojonova Maftuna Sulton qizi, Jumanazarova Nargiza Rutamovna, Kenjayeva Iroda Ramatjonovna, Normatova Iqbol Masharibovna, Nurmetova Marhabo Shakirboyevna, OTAJONOVA SARVINOZ BOBONAZAR QIZI, Quryozova Sanobar Karimovna, Ro'ziboyeva Sarvinoz Shodlik qizi, Sadiqova Farida Yaxshimurotovna, Saidmatova Muattar Ozodovna, Saparmatova Sadoqat Madiyor qizi, Xo'jaeva Shahnoza Farhodovna."
+        "\n- Texnologiya va Kasbiy ta'lim: Boltayeva Zebo Hasanovna, Eshchanova Nodira Erkinovna, Matkarimova Intizor Rustamovna, Matyoqubova Xusniobod Ergashboyevna, Sobirov Ollayor Ro'zmetovich."
+        "\n- San'at va Musiqa: O'razmetov O'tkir Karimboyevich (Musiqa), Xusainov Sodiqjon Bobojonovich (Musiqa), Otamuratov Rustam Odamboyevich (Tasv. san'at), SOBIROVA MALOXAT MUROD QIZI (Chizmachilik/Tasv. san'at)."
+        "\n- Jismoniy tarbiya: Pirnnazarov Nurali Qo'shnazarovich, Ro`zmetova Muhtarama Ollashukur qizi, Xudaynazarov Davronbek Sotimboyevich, Yusupova Zuhraxon Urazbay Qizi."
+        "\n- Boshqa: Madaminov Baxtiyor (Iqtisod), OTABOYEV XUDOYOR (Huquq), Quranboyeva Nafosat (Informatika)."
+        "\n\nManzil: Yangiariq tumani, Po'rsang mahallasi. Aloqa: +998975156307. "
+        "Faqat o'zbek tilida javob ber va o'zingni 'Maktab AI' deb tani."
     )
     
     try:
@@ -43,16 +53,14 @@ def get_ai_response(prompt):
             model=g4f.models.default,
             messages=[
                 {"role": "system", "content": system_instructions},
-                {"role": "user", "content": f"Sen Maktab AIsan. Savol: {prompt}"}
+                {"role": "user", "content": prompt}
             ],
         )
-        
         if response:
             res_str = str(response)
             return res_str.replace("Aria", "Maktab AI").replace("Opera", "19-son maktab")
-        return "Xabar mazmuni bo'sh qaytdi."
-        
-    except Exception as e:
+        return "Serverda biroz uzilish bo'ldi."
+    except Exception:
         return "Hozirda serverlar band. Iltimos, bir ozdan so'ng qayta urinib ko'ring."
 
 # --- Chat tarixi ---
