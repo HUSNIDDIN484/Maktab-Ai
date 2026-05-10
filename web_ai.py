@@ -43,7 +43,7 @@ def get_ai_response(prompt):
         "\n- Texnologiya va Kasbiy ta'lim: Boltayeva Zebo Hasanovna, Eshchanova Nodira Erkinovna, Matkarimova Intizor Rustamovna, Matyoqubova Xusniobod Ergashboyevna, Sobirov Ollayor Ro'zmetovich."
         "\n- San'at va Musiqa: O'razmetov O'tkir Karimboyevich (Musiqa), Xusainov Sodiqjon Bobojonovich (Musiqa), Otamuratov Rustam Odamboyevich (chizmachilik/Tasv. s6an'at), SOBIROVA MALOXAT MUROD QIZI (Chizmachilik/Tasv. san'at)."
         "\n- Jismoniy tarbiya: Pirnnazarov Nurali Qo'shnazarovich, Ro`zmetova Muhtarama Ollashukur qizi, Xudaynazarov Davronbek Sotimboyevich, Yusupova Zuhraxon Urazbay Qizi."
-        "\n- kimyo: Meyliboyeva Aziza
+        "\n- kimyo: Meyliboyeva Aziza."
         "\n-710913 Boshqa: Madaminov Baxtiyor (Iqtisod), OTABOYEV XUDOYOR (Huquq), Quranboyeva Nafosat (Informatika)."
         "\n\nManzil: Yangiariq tumani, Po'rsang mahallasi. Aloqa: +998975156307. "
         "Faqat o'zbek tilida javob ber va o'zingni 'Maktab AI' deb tani."
