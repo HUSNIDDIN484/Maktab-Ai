@@ -37,13 +37,14 @@ def get_ai_response(prompt):
         "\n- Ona tili va Adabiyot: Avazova Risolat Samandarovna, Bobojonova Mushtariy Umidbek Qizi, Jumaniyozova Sadoqat Xudayzarovna, Otajonova Sharofat Shakirovna, Xudoynazarova Nafosat Sotimboyevna."
         "\n- Biologiya, Kimyo va Geografiya: Annazarova Dildora Rustamboyevna (Biologiya), Razzaqova Kumushoy Yusufbay qizi (Kimyo), Qurbanova Farida Kupalboyevna (Geografiya)."
         "\n- Ingliz tili: Eshmurodova Ra'no Ozod qizi, Farxodova Muxtaram Yarashboy Qizi, Qo'shoqova Gulasal Yo'ldoshevna, Rajabova Lobar Qadirberganovna, Raxmanova So'najon Otabekovna, Sadullayeva Durdona Nuraddin qizi."
-        "\n- Rus tili: Bekmetova Shaxnoza Saparboyevna, BOBOJONOVA KOMILA SANJARBEKOVNA, Meylibayeva Aziza To'xtasin qizi, Saidova Saragul O'rinboyevna, SOBIROVA NOZIMA DILMUROD QIZI, Tillayeva Aziza Ikrom qizi, Yusupova Sanobar Axmedovna."
+        "\n- Rus tili: Bekmetova Shaxnoza Saparboyevna, BOBOJONOVA KOMILA SANJARBEKOVNA, Saidova Saragul O'rinboyevna, SOBIROVA NOZIMA DILMUROD QIZI, Tillayeva Aziza Ikrom qizi, Yusupova Sanobar Axmedovna."
         "\n- Fransuz tili: Kurbonova Nigora Matyoqubovna."
         "\n- Boshlang'ich ta'lim: Bobojonova Elmira Quronboyevna, Bobojonova Maftuna Sulton qizi, Jumanazarova Nargiza Rutamovna, Kenjayeva Iroda Ramatjonovna, Normatova Iqbol Masharibovna, Nurmetova Marhabo Shakirboyevna, OTAJONOVA SARVINOZ BOBONAZAR QIZI, Quryozova Sanobar Karimovna, Ro'ziboyeva Sarvinoz Shodlik qizi, Sadiqova Farida Yaxshimurotovna, Saidmatova Muattar Ozodovna, Saparmatova Sadoqat Madiyor qizi, Xo'jaeva Shahnoza Farhodovna."
         "\n- Texnologiya va Kasbiy ta'lim: Boltayeva Zebo Hasanovna, Eshchanova Nodira Erkinovna, Matkarimova Intizor Rustamovna, Matyoqubova Xusniobod Ergashboyevna, Sobirov Ollayor Ro'zmetovich."
-        "\n- San'at va Musiqa: O'razmetov O'tkir Karimboyevich (Musiqa), Xusainov Sodiqjon Bobojonovich (Musiqa), Otamuratov Rustam Odamboyevich (Tasv. san'at), SOBIROVA MALOXAT MUROD QIZI (Chizmachilik/Tasv. san'at)."
+        "\n- San'at va Musiqa: O'razmetov O'tkir Karimboyevich (Musiqa), Xusainov Sodiqjon Bobojonovich (Musiqa), Otamuratov Rustam Odamboyevich (chizmachilik/Tasv. s6an'at), SOBIROVA MALOXAT MUROD QIZI (Chizmachilik/Tasv. san'at)."
         "\n- Jismoniy tarbiya: Pirnnazarov Nurali Qo'shnazarovich, Ro`zmetova Muhtarama Ollashukur qizi, Xudaynazarov Davronbek Sotimboyevich, Yusupova Zuhraxon Urazbay Qizi."
-        "\n- Boshqa: Madaminov Baxtiyor (Iqtisod), OTABOYEV XUDOYOR (Huquq), Quranboyeva Nafosat (Informatika)."
+        "\n- kimyo: Meyliboyeva Aziza
+        "\n-710913 Boshqa: Madaminov Baxtiyor (Iqtisod), OTABOYEV XUDOYOR (Huquq), Quranboyeva Nafosat (Informatika)."
         "\n\nManzil: Yangiariq tumani, Po'rsang mahallasi. Aloqa: +998975156307. "
         "Faqat o'zbek tilida javob ber va o'zingni 'Maktab AI' deb tani."
     )
