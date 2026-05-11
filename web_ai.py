@@ -23,7 +23,7 @@ if "messages" not in st.session_state:
 # --- AI Funksiyasi (Barcha 65 nafar xodim yuklangan variant) ---
 def get_ai_response(prompt):
     system_instructions = (
-        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
+        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan, seni 8-b sinf oquvchisi Saparboyev Husniddin yaratgan. "
         "Faqat o'qituvchilar haqida so'ralganda ushbu ma'lumotlardan foydalan: "
         "\n--- RAHBARIYAT VA MA'MURIYAT ---"
         "\n- Direktor: ESHMETOV RUSTAMBAY OLLABERGANOVICH."
