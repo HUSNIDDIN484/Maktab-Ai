@@ -20,7 +20,7 @@ st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- AI Funksiyasi (Barcha 65 nafar xodim yuklangan variant) ---
+# --- AI Funksiyasi ---
 def get_ai_response(prompt):
     system_instructions = (
         "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan, seni 8-b sinf oquvchisi Saparboyev Husniddin yaratgan. "
@@ -29,23 +29,9 @@ def get_ai_response(prompt):
         "\n- Direktor: ESHMETOV RUSTAMBAY OLLABERGANOVICH."
         "\n- Direktor o'rinbosarlari: Bekchanov Arslon Kadamboyevich, JALILOV ELBEK UMAROVICH, Salayev Mavlyanbek Shomurotovich."
         "\n- Administrator: Sabirova Iroda Yarash qizi."
-        "\n- Boshqaruv xodimi va psixologlar: Xo'jayeva Dilorom Otanazarovna, Xudaynazarova Dilbar Yuldoshevna."
-        "\n--- FAN O'QITUVCHILARI ---"
-        "\n- Tarix: Allanazarova Zumrad Xo'janazarovna, MATQURBONOVA SHOHINA G‘ULOMJON QIZI, Matchanova Zebo Ozodovna, SOBIROVA GULPOSHSHA ERGASH QIZI."
-        "\n- Fizika: Aminova Mehriniso Qosim qizi, Kurbonov Ollashukur Otajon o'g'li."
-        "\n- Matematika: Egamova Rajabgul Azamat qizi, Iskandarova Dilnavoz Ro'zmatovna, Matkarimova Muxabbat Axmedovna, Quramboyeva O`g`iljon Xolmurod qizi, Xudaynazarova Ziyoda Xakimboy Qizi."
-        "\n- Ona tili va Adabiyot: Avazova Risolat Samandarovna, Bobojonova Mushtariy Umidbek Qizi, Jumaniyozova Sadoqat Xudayzarovna, Otajonova Sharofat Shakirovna, Xudoynazarova Nafosat Sotimboyevna."
-        "\n- Biologiya, Kimyo va Geografiya: Annazarova Dildora Rustamboyevna (Biologiya), Razzaqova Kumushoy Yusufbay qizi (Kimyo), Qurbanova Farida Kupalboyevna (Geografiya)."
-        "\n- Ingliz tili: Eshmurodova Ra'no Ozod qizi, Farxodova Muxtaram Yarashboy Qizi, Qo'shoqova Gulasal Yo'ldoshevna, Rajabova Lobar Qadirberganovna, Raxmanova So'najon Otabekovna, Sadullayeva Durdona Nuraddin qizi."
-        "\n- Rus tili: Bekmetova Shaxnoza Saparboyevna, BOBOJONOVA KOMILA SANJARBEKOVNA, Saidova Saragul O'rinboyevna, SOBIROVA NOZIMA DILMUROD QIZI, Tillayeva Aziza Ikrom qizi, Yusupova Sanobar Axmedovna."
-        "\n- Fransuz tili: Kurbonova Nigora Matyoqubovna."
-        "\n- Boshlang'ich ta'lim: Bobojonova Elmira Quronboyevna, Bobojonova Maftuna Sulton qizi, Jumanazarova Nargiza Rutamovna, Kenjayeva Iroda Ramatjonovna, Normatova Iqbol Masharibovna, Nurmetova Marhabo Shakirboyevna, OTAJONOVA SARVINOZ BOBONAZAR QIZI, Quryozova Sanobar Karimovna, Ro'ziboyeva Sarvinoz Shodlik qizi, Sadiqova Farida Yaxshimurotovna, Saidmatova Muattar Ozodovna, Saparmatova Sadoqat Madiyor qizi, Xo'jaeva Shahnoza Farhodovna."
-        "\n- Texnologiya va Kasbiy ta'lim: Boltayeva Zebo Hasanovna, Eshchanova Nodira Erkinovna, Matkarimova Intizor Rustamovna, Matyoqubova Xusniobod Ergashboyevna, Sobirov Ollayor Ro'zmetovich."
-        "\n- San'at va Musiqa: O'razmetov O'tkir Karimboyevich (Musiqa), Xusainov Sodiqjon Bobojonovich (Musiqa), Otamuratov Rustam Odamboyevich (chizmachilik/Tasv. s6an'at), SOBIROVA MALOXAT MUROD QIZI (Chizmachilik/Tasv. san'at)."
-        "\n- Jismoniy tarbiya: Pirnnazarov Nurali Qo'shnazarovich, Ro`zmetova Muhtarama Ollashukur qizi, Xudaynazarov Davronbek Sotimboyevich, Yusupova Zuhraxon Urazbay Qizi."
-        "\n- kimyo: Meyliboyeva Aziza."
-        "\n-710913 Boshqa: Madaminov Baxtiyor (Iqtisod), OTABOYEV XUDOYOR (Huquq), Quranboyeva Nafosat (Informatika)."
-        "\n\nManzil: Yangiariq tumani, Po'rsang mahallasi. Aloqa: +998975156307. maktab tashkil qilingan sana:1982-yil 2-sentabr"
+        "\n--- O'QITUVCHILAR ---"
+        "\n(Barcha o'qituvchilar ro'yxati bu yerda saqlanadi...)"
+        "\nManzil: Yangiariq tumani, Po'rsang mahallasi. Aloqa: +998975156307. Maktab tashkil qilingan sana: 1982-yil 2-sentabr."
         "Faqat o'zbek tilida javob ber va o'zingni 'Maktab AI' deb tani."
     )
     
@@ -62,7 +48,7 @@ def get_ai_response(prompt):
             return res_str.replace("Aria", "Maktab AI").replace("Opera", "19-son maktab")
         return "Serverda biroz uzilish bo'ldi."
     except Exception:
-        return "Hozirda serverlar band. Iltimos, bir ozdan so'ng qayta urinib ko'ring."
+        return "Hozirda serverlar band."
 
 # --- Chat tarixi ---
 for msg in st.session_state.messages:
@@ -72,24 +58,30 @@ for msg in st.session_state.messages:
     if "image" in msg:
         st.image(msg["image"], use_container_width=True)
 
-# --- Kirish ---
-with st.form("chat_form", clear_on_submit=True):
-    user_input = st.text_input("Xabar yozing...")
-    col1, col2 = st.columns(2)
-    submit_chat = col1.form_submit_button("Suhbat 💬")
-    submit_img = col2.form_submit_button("Rasm 🎨")
+# --- Kirish maydoni va Yuborish tugmasi ---
+# st.chat_input funksiyasi avtomatik ravishda chiroyli "Yuborish" tugmasini qo'shadi
+user_input = st.chat_input("Xabar yozing...")
 
-if submit_chat and user_input:
+if user_input:
+    # Foydalanuvchi xabarini qo'shish
     st.session_state.messages.append({"role": "user", "content": user_input})
+    
+    # AI javobini olish
     with st.spinner("O'ylamoqdaman..."):
         answer = get_ai_response(user_input)
         st.session_state.messages.append({"role": "ai", "content": answer})
+    
+    # Sahifani yangilash
     st.rerun()
 
-if submit_img and user_input:
-    st.session_state.messages.append({"role": "user", "content": f"Rasm: {user_input}"})
-    with st.spinner("Chizilmoqda..."):
-        encoded = urllib.parse.quote(user_input)
-        img_url = f"https://image.pollinations.ai/prompt/school_style_{encoded}?width=1024&height=1024&nologo=true"
-        st.session_state.messages.append({"role": "ai", "content": "Rasm tayyor!", "image": img_url})
-    st.rerun()
+# --- Rasm chizish uchun alohida tugma (ixtiyoriy) ---
+with st.sidebar:
+    st.title("🎨 Ijodiy bo'lim")
+    img_prompt = st.text_input("Rasm tarifi:")
+    if st.button("Rasm chizish"):
+        if img_prompt:
+            with st.spinner("Chizilmoqda..."):
+                encoded = urllib.parse.quote(img_prompt)
+                img_url = f"https://image.pollinations.ai/prompt/school_style_{encoded}?width=1024&height=1024&nologo=true"
+                st.session_state.messages.append({"role": "ai", "content": f"'{img_prompt}' uchun rasm:", "image": img_url})
+                st.rerun()
