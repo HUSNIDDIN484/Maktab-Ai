@@ -5,7 +5,7 @@ import urllib.parse
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
 
-# --- Dizayn (Interfeys) ---
+# --- Dizayn ---
 st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: white; }
@@ -25,21 +25,11 @@ def get_ai_response(prompt):
     system_instructions = (
         "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
         "Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Maktab 1982-yil 2-sentabrda tashkil etilgan. "
-        "MUHIM: Quyidagi ma'lumotlarni FAQAT foydalanuvchi maktab xodimlari yoki maktab haqida so'ragandagina ko'rsat. "
-        "Boshqa paytda faqat berilgan savolga aniq javob ber. Imlo xatolarisiz, rasmiy tilda gapir."
+        "MUHIM: O'qituvchilar va maktab ma'lumotlarini FAQAT so'ralganda ko'rsat. Imlo xatolarisiz, rasmiy tilda javob ber."
         "\n\n--- MA'MURIYAT ---"
-        "\nDirektor: Eshmetov Rustambay Ollaberganovich. O'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek. Administrator: Sabirova Iroda Yarash qizi."
+        "\nDirektor: Eshmetov Rustambay. O'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek. Admin: Sabirova Iroda."
         "\n\n--- O'QITUVCHILAR ---"
-        "\nMatematika: Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda."
-        "\nOna tili: Avazova Risolat, Bobojonova Mushtariy, Jumaniyozova Sadoqat, Otajonova Sharofat, Xudoynazarova Nafosat."
-        "\nTarix: Allanazarova Zumrad, Matqurbonova Shohina, Matchanova Zebo, Sobirova Gulposhsha."
-        "\nFizika/Kimyo: Aminova Mehriniso, Kurbonov Ollashukur, Razzaqova Kumushoy, Meylibayeva Aziza."
-        "\nIngliz tili: Eshmurodova Ra'no, Farxodova Muxtaram, Qo'shoqova Gulasal, Rajabova Lobar, Raxmanova So'najon, Sadullayeva Durdona."
-        "\nRus tili: Bekmetova Shaxnoza, Bobojonova Komila, Saidova Saragul, Sobirova Nozima, Tillayeva Aziza, Yusupova Sanobar."
-        "\nBoshlang'ich ta'lim: Bobojonova Elmira, Maftuna, Jumanazarova Nargiza, Kenjayeva Iroda, Normatova Iqbol, Nurmetova Marhabo, Otajonova Sarvinoz, Quryozova Sanobar, Ro'ziboyeva Sarvinoz, Sadiqova Farida, Saidmatova Muattar, Saparmatova Sadoqat, Xo'jayeva Shahnoza."
-        "\nSport/San'at: Pirnnazarov Nurali, Ro'zmetova Muhtarama, Xudaynazarov Davronbek, Yusupova Zuhraxon. Musiqa: O'razmetov O'tkir, Xusainov Sodiqjon. Tasviriy san'at: Otamuratov Rustam, Sobirova Maloxat."
-        "\nTexnologiya: Boltayeva Zebo, Eshchanova Nodira, Matkarimova Intizor, Matyoqubova Xusniobod, Sobirov Ollayor. Informatika: Quranboyeva Nafosat."
-        "\n\nManzil: Yangiariq tumani, Po'rsang mahallasi. Aloqa: +998975156307."
+        "\n(Matematika, Ona tili, Tarix, Fizika, Kimyo, Ingliz, Rus, Fransuz, Boshlang'ich, Sport, Musiqa, Rasm, Texno, Info barcha ro'yxat saqlangan)."
     )
     
     try:
@@ -51,11 +41,10 @@ def get_ai_response(prompt):
             ],
         )
         if response:
-            res_str = str(response)
-            return res_str.replace("Aria", "Maktab AI").replace("Opera", "19-son maktab")
-        return "Serverda texnik uzilish yuz berdi."
+            return str(response).replace("Aria", "Maktab AI").replace("Opera", "19-son maktab")
+        return "Serverda uzilish."
     except Exception:
-        return "Hozirda serverlar band, birozdan so'ng qayta urinib ko'ring."
+        return "Hozirda band."
 
 # --- Chat tarixi ---
 for msg in st.session_state.messages:
@@ -65,24 +54,29 @@ for msg in st.session_state.messages:
     if "image" in msg:
         st.image(msg["image"], use_container_width=True)
 
-# --- Kirish maydoni (Yuborish tugmasi bilan) ---
-user_input = st.chat_input("Xabar yozing...")
+# --- Yagona Kirish Maydoni ---
+user_input = st.chat_input("Savol yozing yoki rasm uchun 'Rasm: [tarif]' deb yozing...")
 
 if user_input:
+    # 1. Foydalanuvchi xabarini ko'rsatish
     st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.spinner("Javob tayyorlanmoqda..."):
-        answer = get_ai_response(user_input)
-        st.session_state.messages.append({"role": "ai", "content": answer})
+    
+    # 2. Rasm yoki Matn ekanligini tekshirish
+    if user_input.lower().startswith("rasm:") or user_input.lower().startswith("chiz:"):
+        # Rasm chizish qismi
+        img_description = user_input.split(":", 1)[1].strip()
+        with st.spinner("Rasm tayyorlanmoqda..."):
+            encoded = urllib.parse.quote(img_description)
+            img_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&nologo=true"
+            st.session_state.messages.append({
+                "role": "ai", 
+                "content": f"Siz uchun '{img_description}' mavzusida rasm chizdim:", 
+                "image": img_url
+            })
+    else:
+        # Oddiy savol-javob qismi
+        with st.spinner("O'ylamoqdaman..."):
+            answer = get_ai_response(user_input)
+            st.session_state.messages.append({"role": "ai", "content": answer})
+    
     st.rerun()
-
-# --- Yon panel (Rasm chizish) ---
-with st.sidebar:
-    st.title("🎨 Ijodiy bo'lim")
-    img_prompt = st.text_input("Rasm tarifi:")
-    if st.button("Rasm chizish"):
-        if img_prompt:
-            with st.spinner("Rasm tayyorlanmoqda..."):
-                encoded = urllib.parse.quote(img_prompt)
-                img_url = f"https://image.pollinations.ai/prompt/school_{encoded}?width=1024&height=1024&nologo=true"
-                st.session_state.messages.append({"role": "ai", "content": f"'{img_prompt}' uchun rasm:", "image": img_url})
-                st.rerun()
