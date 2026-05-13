@@ -26,18 +26,22 @@ def get_ai_response(prompt):
         "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
         "Seni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan. "
         "MUHIM QOIDA: Google yoki boshqa tashqi kompaniyalar haqida gapirma. "
-        "Faqat 19-sonli maktab va Husniddin haqida ma'lumot ber. Imlo xatolarisiz, rasmiy va aniq tilda javob ber. "
-        "Ma'lumotlarni faqat so'ralganda taqdim et. "
-        "\n\n--- MAKTAB MA'LUMOTLARI ---"
+        "Sen har tomonlama bilimli yordamchisan: o'quvchilarga matematika, fizika, ona tili va boshqa fanlardan misol-masalalarni yechishda yordam berasan. "
+        "Imlo xatolarisiz, rasmiy va aniq tilda javob ber. "
+        "\n\n--- MAKTAB MA'LUMOTLARI (Faqat so'ralganda foydalan) ---"
         "\nTashkil etilgan sana: 1982-yil 2-sentabr. "
         "\nDirektor: Eshmetov Rustambay Ollaberganovich. "
         "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek. "
         "\nAdministrator: Sabirova Iroda Yarash qizi. "
         "\nO'qituvchilar: Matematika (Egamova R, Iskandarova D, Matkarimova M, Quramboyeva O, Xudaynazarova Z), "
         "Ona tili (Avazova R, Bobojonova M, Jumaniyozova S, Otajonova Sh, Xudoynazarova N), "
+        "Tarix (Allanazarova Z, Matqurbonova Sh, Matchanova Z, Sobirova G), "
+        "Fizika/Kimyo (Aminova M, Kurbonov O, Razzaqova K, Meylibayeva A), "
         "Ingliz tili (Eshmurodova R, Farxodova M, Qo'shoqova G, Rajabova L, Raxmanova S, Sadullayeva D), "
-        "Rus tili (Bekmetova Sh, Bobojonova K, Saidova S, Sobirova N, Tillayeva A, Yusupova S). "
-        "Boshqa barcha fan o'qituvchilari ma'lumotlar bazasida mavjud."
+        "Rus tili (Bekmetova Sh, Bobojonova K, Saidova S, Sobirova N, Tillayeva A, Yusupova S), "
+        "Boshlang'ich (Bobojonova E, Maftuna, Jumanazarova N, Kenjayeva I, Normatova I, Nurmetova M, Otajonova S, Quryozova S, Ro'ziboyeva S, Sadiqova F, Saidmatova M, Saparmatova S, Xo'jayeva Sh), "
+        "Sport/San'at (Pirnnazarov N, Ro'zmetova M, Xudaynazarov D, Yusupova Z, O'razmetov O', Xusainov S, Otamuratov R, Sobirova M), "
+        "Texno/Info (Boltayeva Z, Eshchanova N, Matkarimova I, Matyoqubova X, Sobirov O, Quranboyeva N)."
     )
     
     try:
@@ -50,7 +54,7 @@ def get_ai_response(prompt):
         )
         if response:
             res_str = str(response)
-            # Google haqidagi har qanday gapni avtomatik tozalash
+            # Har qanday holatda ham Googleni aralashtirmaslik uchun:
             return res_str.replace("Google", "19-son maktab jamoasi").replace("Aria", "Maktab AI")
         return "Xabar yuborishda xatolik yuz berdi."
     except Exception:
@@ -64,8 +68,8 @@ for msg in st.session_state.messages:
     if "image" in msg:
         st.image(msg["image"], use_container_width=True)
 
-# --- Yagona Kirish Maydoni (Yuborish tugmasi bilan) ---
-user_input = st.chat_input("Savol yozing yoki rasm uchun 'Rasm: [tarif]' deb yozing...")
+# --- Kirish maydoni (Yuborish tugmasi bilan) ---
+user_input = st.chat_input("Savol bering yoki rasm uchun 'Rasm: [tarif]' deb yozing...")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
@@ -78,8 +82,8 @@ if user_input:
             img_url = f"https://image.pollinations.ai/prompt/school_style_{encoded}?width=1024&height=1024&nologo=true"
             st.session_state.messages.append({"role": "ai", "content": f"'{img_desc}' uchun rasm tayyorlandi:", "image": img_url})
     else:
-        # Savol-javob qismi
-        with st.spinner("O'ylamoqdaman..."):
+        # Savol-javob qismi (Endi matematika va boshqa fanlarga javob beradi)
+        with st.spinner("Javob tayyorlanmoqda..."):
             answer = get_ai_response(user_input)
             st.session_state.messages.append({"role": "ai", "content": answer})
     
