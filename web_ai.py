@@ -2,12 +2,12 @@ import streamlit as st
 import g4f
 
 # --- Sahifa sozlamalari ---
-st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
+st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫", layout="wide")
 
-# --- MAJBURIY CSS (Fon rasm va shaffoflik uchun) ---
-st.markdown(
+# --- CSS (FON VA DIZAYN) ---
+# Diqqat: Bu qismda xato qilmaslik uchun qo'shtirnoqlarga e'tibor bering
+st.markdown("""
 <style>
-    /* Asosiy fonni Yonsei universiteti rasmiga almashtirish */
     .stApp {
         background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), 
                     url("https://images.unsplash.com/photo-1622662914032-901e1494918e?q=80&w=2070&auto=format&fit=crop") !important;
@@ -16,46 +16,48 @@ st.markdown(
         background-attachment: fixed !important;
     }
 
-    /* Streamlit standart elementlarini shaffof qilish */
     [data-testid="stHeader"], [data-testid="stAppViewBlockContainer"], .main {
         background-color: transparent !important;
     }
 
     .title { 
-        color: white; text-align: center; font-size: 38px; font-weight: bold; 
-        text-shadow: 3px 3px 15px black; padding: 20px;
+        color: white; 
+        text-align: center; 
+        font-size: 38px; 
+        font-weight: bold; 
+        text-shadow: 3px 3px 15px black; 
+        padding: 20px;
     }
 
-    /* Xabarlar dizayni */
     .user-msg { 
         background-color: rgba(255, 255, 255, 0.1) !important; 
         padding: 15px; border-radius: 15px; margin: 10px 0; 
-        border-right: 5px solid #3B8ED0; color: white; backdrop-filter: blur(8px);
+        border-right: 5px solid #3B8ED0; color: white; backdrop-filter: blur(10px);
     }
 
     .ai-msg { 
         background-color: rgba(0, 0, 0, 0.5) !important; 
         padding: 15px; border-radius: 15px; 
-        border-left: 5px solid #3B8ED0; margin: 10px 0; color: white; backdrop-filter: blur(8px);
+        border-left: 5px solid #3B8ED0; margin: 10px 0; color: white; backdrop-filter: blur(10px);
     }
 </style>
-, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- MA'LUMOTLAR BAZASI ---
+# --- TO'LIQ MAKTAB BAZASI ---
 def get_ai_response(prompt):
     system_instructions = (
         "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
         "Seni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan. "
-        "DIQQAT: Google haqida gapirma. Imlo xatolarisiz, rasmiy va aniq tilda javob ber. Ortiqcha gapirmasdan savolga to'liq javob ber."
+        "DIQQAT: Google haqida gapirma. Imlo xatolarisiz, rasmiy va aniq tilda javob ber. "
         
         "\n\n--- MA'MURIYAT ---"
         "\nDirektor: Eshmetov Rustambay Ollaberganovich. "
-        "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek. "
+        "\nO'rinbosarlar: Bekchanov Arslon (O'quv), Jalilov Elbek (Ma'naviyat), Salayev Mavlyanbek (Xo'jalik). "
         "\nAdministrator: Sabirova Iroda Yarash qizi."
         
         "\n\n--- O'QITUVCHILAR RO'YXATI ---"
@@ -79,17 +81,16 @@ def get_ai_response(prompt):
             model=g4f.models.default,
             messages=[{"role": "system", "content": system_instructions}, {"role": "user", "content": prompt}],
         )
-        # Google so'zini avtomatik almashtirish
         return str(response).replace("Google", "Maktab jamoasi")
     except:
-        return "Tizimda xatolik yuz berdi. Iltimos, birozdan so'ng qayta urinib ko'ring."
+        return "Tizimda kichik texnik nosozlik. Iltimos, qayta urinib ko'ring."
 
 # --- CHAT ---
 for msg in st.session_state.messages:
     role_class = "user-msg" if msg["role"] == "user" else "ai-msg"
     st.markdown(f'<div class="{role_class}"><b>{"Siz" if msg["role"] == "user" else "Maktab AI"}:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
 
-user_input = st.chat_input("Savolingizni yozing...")
+user_input = st.chat_input("Ustozlar yoki maktab haqida so'rang...")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
