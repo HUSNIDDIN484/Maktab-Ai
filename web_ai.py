@@ -4,9 +4,10 @@ import g4f
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
 
-# --- KUCHAYTIRILGAN DIZAYN ---
-st.markdown("""
+# --- MAJBURIY CSS (Fon rasm va shaffoflik uchun) ---
+st.markdown(
 <style>
+    /* Asosiy fonni Yonsei universiteti rasmiga almashtirish */
     .stApp {
         background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), 
                     url("https://images.unsplash.com/photo-1622662914032-901e1494918e?q=80&w=2070&auto=format&fit=crop") !important;
@@ -15,6 +16,7 @@ st.markdown("""
         background-attachment: fixed !important;
     }
 
+    /* Streamlit standart elementlarini shaffof qilish */
     [data-testid="stHeader"], [data-testid="stAppViewBlockContainer"], .main {
         background-color: transparent !important;
     }
@@ -24,6 +26,7 @@ st.markdown("""
         text-shadow: 3px 3px 15px black; padding: 20px;
     }
 
+    /* Xabarlar dizayni */
     .user-msg { 
         background-color: rgba(255, 255, 255, 0.1) !important; 
         padding: 15px; border-radius: 15px; margin: 10px 0; 
@@ -36,23 +39,23 @@ st.markdown("""
         border-left: 5px solid #3B8ED0; margin: 10px 0; color: white; backdrop-filter: blur(8px);
     }
 </style>
-""", unsafe_allow_html=True)
+, unsafe_allow_html=True)
 
 st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- TO'LIQ MA'LUMOTLAR BAZASI ---
+# --- MA'LUMOTLAR BAZASI ---
 def get_ai_response(prompt):
     system_instructions = (
-        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan."
-        "Seni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan."
+        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
+        "Seni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan. "
         "DIQQAT: Google haqida gapirma. Imlo xatolarisiz, rasmiy va aniq tilda javob ber. Ortiqcha gapirmasdan savolga to'liq javob ber."
         
         "\n\n--- MA'MURIYAT ---"
-        "\nDirektor: Eshmetov Rustambay Ollaberganovich."
-        "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek."
+        "\nDirektor: Eshmetov Rustambay Ollaberganovich. "
+        "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek. "
         "\nAdministrator: Sabirova Iroda Yarash qizi."
         
         "\n\n--- O'QITUVCHILAR RO'YXATI ---"
@@ -76,9 +79,10 @@ def get_ai_response(prompt):
             model=g4f.models.default,
             messages=[{"role": "system", "content": system_instructions}, {"role": "user", "content": prompt}],
         )
+        # Google so'zini avtomatik almashtirish
         return str(response).replace("Google", "Maktab jamoasi")
     except:
-        return "Xatolik yuz berdi, qayta urinib ko'ring."
+        return "Tizimda xatolik yuz berdi. Iltimos, birozdan so'ng qayta urinib ko'ring."
 
 # --- CHAT ---
 for msg in st.session_state.messages:
