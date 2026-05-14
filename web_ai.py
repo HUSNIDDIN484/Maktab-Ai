@@ -1,16 +1,15 @@
 import streamlit as st
 import g4f
-import urllib.parse
 
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
 
-# --- FON RASMI (Yonsei University) ---
+# --- KUCHAYTIRILGAN DIZAYN (Fon rasm va shaffoflik) ---
 st.markdown("""
 <style>
     .stApp {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
-                          url("https://images.unsplash.com/photo-1622662914032-901e1494918e?q=80&w=2070&auto=format&fit=crop") !important;
+        background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), 
+                    url("https://images.unsplash.com/photo-1622662914032-901e1494918e?q=80&w=2070&auto=format&fit=crop") !important;
         background-size: cover !important;
         background-position: center !important;
         background-attachment: fixed !important;
@@ -21,24 +20,20 @@ st.markdown("""
     }
 
     .title { 
-        color: white; 
-        text-align: center; 
-        font-size: 38px; 
-        font-weight: bold; 
-        text-shadow: 2px 2px 12px rgba(0,0,0,0.9);
-        padding: 20px;
+        color: white; text-align: center; font-size: 38px; font-weight: bold; 
+        text-shadow: 3px 3px 15px black; padding: 20px;
     }
 
     .user-msg { 
-        background-color: rgba(50, 50, 65, 0.85) !important; 
+        background-color: rgba(255, 255, 255, 0.1) !important; 
         padding: 15px; border-radius: 15px; margin: 10px 0; 
-        border-right: 5px solid #3B8ED0; color: white;
+        border-right: 5px solid #3B8ED0; color: white; backdrop-filter: blur(8px);
     }
 
     .ai-msg { 
-        background-color: rgba(20, 20, 25, 0.85) !important; 
+        background-color: rgba(0, 0, 0, 0.5) !important; 
         padding: 15px; border-radius: 15px; 
-        border-left: 5px solid #3B8ED0; margin: 10px 0; color: white;
+        border-left: 5px solid #3B8ED0; margin: 10px 0; color: white; backdrop-filter: blur(8px);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -48,24 +43,32 @@ st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- MA'MURIYAT VA USTOZLAR BAZASI ---
+# --- TO'LIQ MA'LUMOTLAR BAZASI ---
 def get_ai_response(prompt):
     system_instructions = (
-        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan."
-        "Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan."
-        "DIQQAT: Google yoki boshqa kompaniyalar haqida gapirma. Rasmiy, aniq va imlo xatolarisiz javob ber."
+        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
+        "Seni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan. "
+        "DIQQAT: Google haqida gapirma. Imlo xatolarisiz, rasmiy va aniq tilda javob ber. Ortiqcha gapirmasdan savolga to'liq javob ber."
         
         "\n\n--- MA'MURIYAT ---"
-        "\nDirektor: Eshmetov Rustambay Ollaberganovich."
-        "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek."
-        "\nAdministrator: Sabirova Iroda."
+        "\nDirektor: Eshmetov Rustambay Ollaberganovich. "
+        "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek. "
+        "\nAdministrator: Sabirova Iroda Yarash qizi."
         
         "\n\n--- O'QITUVCHILAR RO'YXATI ---"
-        "\nMatematika: Egamova R, Iskandarova D, Matkarimova M, Quramboyeva O, Xudaynazarova Z."
-        "\nOna tili va Adabiyot: Avazova R, Bobojonova M, Jumaniyozova S, Otajonova Sh, Xudoynazarova N."
-        "\nIngliz tili: Eshmurodova R, Farxodova M, Qo'shoqova G, Rajabova L, Raxmanova S, Sadullayeva D."
-        "\nRus tili: Bekmetova Sh, Bobojonova K, Saidova S, Sobirova N, Tillayeva A, Yusupova S."
-        "\nBoshlang'ich sinf o'qituvchilari: Bobojonova E, Jumanazarova N, Kenjayeva I, Normatova I, Nurmetova M, Otajonova S, Quryozova S, Ro'ziboyeva S, Sadiqova F, Saidmatova M, Saparmatova S, Xo'jayeva Sh."
+        "\nMatematika: Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda."
+        "\nOna tili: Avazova Risolat, Bobojonova Mushtariy, Jumaniyozova Sadoqat, Otajonova Sharofat, Xudoynazarova Nafosat."
+        "\nIngliz tili: Eshmurodova Ra'no, Farxodova Muxtaram, Qo'shoqova Gulasal, Rajabova Lobar, Raxmanova So'najon, Sadullayeva Durdona."
+        "\nRus tili: Bekmetova Shaxnoza, Bobojonova Komila, Saidova Saragul, Sobirova Nozima, Tillayeva Aziza, Yusupova Sanobar."
+        "\nTarix: Allanazarova Zumrad, Matqurbonova Shohina, Matchanova Zebo, Sobirova Gulposhsha."
+        "\nFizika/Kimyo: Aminova Mehriniso, Kurbonov Ollashukur, Razzaqova Kumushoy, Meylibayeva Aziza."
+        "\nInformatika: Quranboyeva Nafosat."
+        "\nBoshlang'ich ta'lim: Bobojonova Elmira, Maftuna, Jumanazarova Nargiza, Kenjayeva Iroda, Normatova Iqbol, Nurmetova Marhabo, Otajonova Sarvinoz, Quryozova Sanobar, Ro'ziboyeva Sarvinoz, Sadiqova Farida, Saidmatova Muattar, Saparmatova Sadoqat, Xo'jayeva Shahnoza."
+        "\nSport: Pirnnazarov Nurali, Ro'zmetova Muhtarama, Xudaynazarov Davronbek, Yusupova Zuhraxon."
+        "\nMusiqa/San'at: O'razmetov O'tkir, Xusainov Sodiqjon, Otamuratov Rustam, Sobirova Maloxat."
+        "\nTexnologiya: Boltayeva Zebo, Eshchanova Nodira, Matkarimova Intizor, Matyoqubova Xusniobod, Sobirov Ollayor."
+        
+        "\n\nMaktab 1982-yil 2-sentabrda tashkil etilgan. Manzil: Yangiariq tumani, Po'rsang mahallasi."
     )
     
     try:
@@ -73,17 +76,16 @@ def get_ai_response(prompt):
             model=g4f.models.default,
             messages=[{"role": "system", "content": system_instructions}, {"role": "user", "content": prompt}],
         )
-        # Tizim nomini to'g'rilash
         return str(response).replace("Google", "Maktab jamoasi").replace("Aria", "Maktab AI")
     except:
         return "Hozirda tizim band, iltimos birozdan so'ng qayta urinib ko'ring."
 
-# --- CHAT INTERFEYSI ---
+# --- CHAT ---
 for msg in st.session_state.messages:
     role_class = "user-msg" if msg["role"] == "user" else "ai-msg"
     st.markdown(f'<div class="{role_class}"><b>{"Siz" if msg["role"] == "user" else "Maktab AI"}:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
 
-user_input = st.chat_input("Savol yozing (Masalan: Direktorimiz kim?)...")
+user_input = st.chat_input("Savolingizni yozing...")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
