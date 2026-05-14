@@ -3,42 +3,43 @@ import g4f
 import urllib.parse
 
 # --- Sahifa sozlamalari ---
-st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
+st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫", layout="centered")
 
-# --- Dizayn va Orqa Fon (Yangilangan) ---
+# --- Fon rasmi va Dizaynni majburiy o'rnatish ---
+# Bu yerda rasm chiqishi uchun eng kuchli CSS usuli ishlatilgan
 st.markdown("""
 <style>
-    /* Fon rasmi va qorong'u qatlam */
+    /* Asosiy fon */
     .stApp {
-        background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), 
-                    url("https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop") !important;
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                    url("https://cdn.pixabay.com/photo/2016/10/11/13/43/university-1731613_1280.jpg") !important;
         background-size: cover !important;
         background-position: center !important;
         background-attachment: fixed !important;
     }
 
-    /* Streamlit bloklarini shaffof qilish */
-    [data-testid="stHeader"], [data-testid="stAppViewBlockContainer"], [data-testid="stVerticalBlock"] {
+    /* Barcha qatlamlarni shaffof qilish */
+    [data-testid="stHeader"], [data-testid="stAppViewBlockContainer"], .main {
         background-color: transparent !important;
     }
 
     .title { 
-        color: #ffffff; 
+        color: white; 
         text-align: center; 
-        font-size: 36px; 
+        font-size: 38px; 
         font-weight: bold; 
-        padding: 10px;
-        text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+        padding-top: 20px;
+        text-shadow: 2px 2px 15px rgba(0,0,0,1);
     }
 
+    /* Xabarlar dizayni */
     .user-msg { 
-        background-color: rgba(45, 45, 55, 0.85); 
+        background-color: rgba(60, 60, 75, 0.9) !important; 
         padding: 15px; border-radius: 15px; margin: 10px 0; 
         border-right: 5px solid #3B8ED0; color: white;
     }
-
     .ai-msg { 
-        background-color: rgba(25, 25, 25, 0.85); 
+        background-color: rgba(30, 30, 30, 0.9) !important; 
         padding: 15px; border-radius: 15px; 
         border-left: 5px solid #3B8ED0; margin: 10px 0; color: white;
     }
@@ -50,60 +51,48 @@ st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- AI Funksiyasi va Ustozlar Bazasi ---
+# --- AI Funksiyasi va Ustozlar Ma'lumotnomasi ---
 def get_ai_response(prompt):
     system_instructions = (
-        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
+        "Sening isming - Maktab AI. 19-sonli maktab yordamchisisan. "
         "Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. "
-        "DIQQAT: Google haqida gapirma. Imlo xatolarisiz, faqat rasmiy va aniq tilda javob ber. "
-        
+        "Google haqida gapirma. Imlo xatolarisiz, rasmiy javob ber."
         "\n\n--- MA'MURIYAT ---"
-        "\nDirektor: Eshmetov Rustambay Ollaberganovich."
-        "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek."
-        "\nAdministrator: Sabirova Iroda Yarash qizi."
-        
-        "\n\n--- O'QITUVCHILAR RO'YXATI ---"
+        "\nDirektor: Eshmetov Rustambay. O'rinbosarlar: Bekchanov A, Jalilov E, Salayev M. Admin: Sabirova I."
+        "\n\n--- O'QITUVCHILAR ---"
         "\nMatematika: Egamova R, Iskandarova D, Matkarimova M, Quramboyeva O, Xudaynazarova Z."
-        "\nOna tili va Adabiyot: Avazova R, Bobojonova M, Jumaniyozova S, Otajonova Sh, Xudoynazarova N."
         "\nIngliz tili: Eshmurodova R, Farxodova M, Qo'shoqova G, Rajabova L, Raxmanova S, Sadullayeva D."
+        "\nOna tili: Avazova R, Bobojonova M, Jumaniyozova S, Otajonova Sh, Xudoynazarova N."
         "\nRus tili: Bekmetova Sh, Bobojonova K, Saidova S, Sobirova N, Tillayeva A, Yusupova S."
-        "\nBoshlang'ich sinf: Bobojonova E, Maftuna, Jumanazarova N, Kenjayeva I, Normatova I, Nurmetova M, Otajonova S, Quryozova S, Ro'ziboyeva S, Sadiqova F, Saidmatova M, Saparmatova S, Xo'jayeva Sh."
-        "\nBoshqa fanlar (Fizika, Kimyo, Tarix, Biologiya, Sport, Informatika): Maktabimizning tajribali mutaxassislari dars berishadi."
+        "\nBoshlang'ich: Bobojonova E, Jumanazarova N, Kenjayeva I, Normatova I, Nurmetova M, Otajonova S, Quryozova S, Ro'ziboyeva S, Sadiqova F, Saidmatova M, Saparmatova S, Xo'jayeva Sh."
     )
-    
     try:
         response = g4f.ChatCompletion.create(
             model=g4f.models.default,
-            messages=[
-                {"role": "system", "content": system_instructions},
-                {"role": "user", "content": prompt}
-            ],
+            messages=[{"role": "system", "content": system_instructions}, {"role": "user", "content": prompt}],
         )
-        return str(response).replace("Google", "Maktab jamoasi").replace("Aria", "Maktab AI")
-    except Exception:
-        return "Tizimda yuklama yuqori, keyinroq urinib ko'ring."
+        return str(response).replace("Google", "19-son maktab jamoasi")
+    except:
+        return "Hozircha javob berolmayman, qayta urinib ko'ring."
 
 # --- Chat tarixi ---
 for msg in st.session_state.messages:
     role_class = "user-msg" if msg["role"] == "user" else "ai-msg"
-    st.markdown(f'<div class="{role_class}"><b>{"Siz" if msg["role"] == "user" else "Maktab AI"}:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="{role_class}">{msg["content"]}</div>', unsafe_allow_html=True)
     if "image" in msg:
         st.image(msg["image"])
 
 # --- Kirish ---
-user_input = st.chat_input("Savol bering (Masalan: Matematika ustozlari kim?)...")
+user_input = st.chat_input("Savol bering (Masalan: Direktor kim?)...")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
-    
-    with st.spinner("O'ylanmoqda..."):
+    with st.spinner("Javob tayyorlanmoqda..."):
         if "rasm:" in user_input.lower():
             img_desc = user_input.lower().replace("rasm:", "").strip()
-            encoded = urllib.parse.quote(img_desc)
-            img_url = f"https://image.pollinations.ai/prompt/{encoded}"
-            st.session_state.messages.append({"role": "ai", "content": f"'{img_desc}' bo'yicha rasm:", "image": img_url})
+            img_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(img_desc)}"
+            st.session_state.messages.append({"role": "ai", "content": f"'{img_desc}' rasmi:", "image": img_url})
         else:
             answer = get_ai_response(user_input)
             st.session_state.messages.append({"role": "ai", "content": answer})
-    
     st.rerun()
