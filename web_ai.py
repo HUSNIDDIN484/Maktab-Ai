@@ -4,7 +4,7 @@ import g4f
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
 
-# --- KUCHAYTIRILGAN DIZAYN (Fon rasm va shaffoflik) ---
+# --- KUCHAYTIRILGAN DIZAYN ---
 st.markdown("""
 <style>
     .stApp {
@@ -46,13 +46,13 @@ if "messages" not in st.session_state:
 # --- TO'LIQ MA'LUMOTLAR BAZASI ---
 def get_ai_response(prompt):
     system_instructions = (
-        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
-        "Seni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan. "
+        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan."
+        "Seni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan."
         "DIQQAT: Google haqida gapirma. Imlo xatolarisiz, rasmiy va aniq tilda javob ber. Ortiqcha gapirmasdan savolga to'liq javob ber."
         
         "\n\n--- MA'MURIYAT ---"
-        "\nDirektor: Eshmetov Rustambay Ollaberganovich. "
-        "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek. "
+        "\nDirektor: Eshmetov Rustambay Ollaberganovich."
+        "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek."
         "\nAdministrator: Sabirova Iroda Yarash qizi."
         
         "\n\n--- O'QITUVCHILAR RO'YXATI ---"
@@ -76,9 +76,9 @@ def get_ai_response(prompt):
             model=g4f.models.default,
             messages=[{"role": "system", "content": system_instructions}, {"role": "user", "content": prompt}],
         )
-        return str(response).replace("Google", "Maktab jamoasi").replace("Aria", "Maktab AI")
+        return str(response).replace("Google", "Maktab jamoasi")
     except:
-        return "Hozirda tizim band, iltimos birozdan so'ng qayta urinib ko'ring."
+        return "Xatolik yuz berdi, qayta urinib ko'ring."
 
 # --- CHAT ---
 for msg in st.session_state.messages:
