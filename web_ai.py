@@ -5,7 +5,7 @@ import urllib.parse
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
 
-# --- Dizayn (Interfeys) ---
+# --- Dizayn ---
 st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: white; }
@@ -25,23 +25,22 @@ def get_ai_response(prompt):
     system_instructions = (
         "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
         "Seni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan. "
-        "MUHIM QOIDA: Google yoki boshqa tashqi kompaniyalar haqida gapirma. "
-        "Sen har tomonlama bilimli yordamchisan: o'quvchilarga matematika, fizika, ona tili va boshqa fanlardan misol-masalalarni yechishda yordam berasan. "
-        "Imlo xatolarisiz, rasmiy va aniq tilda javob ber. "
-        "\n\n--- MAKTAB MA'LUMOTLARI (Faqat so'ralganda foydalan) ---"
-        "\nTashkil etilgan sana: 1982-yil 2-sentabr. "
-        "\nDirektor: Eshmetov Rustambay Ollaberganovich. "
-        "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek. "
-        "\nAdministrator: Sabirova Iroda Yarash qizi. "
-        "\nO'qituvchilar: Matematika (Egamova R, Iskandarova D, Matkarimova M, Quramboyeva O, Xudaynazarova Z), "
-        "Ona tili (Avazova R, Bobojonova M, Jumaniyozova S, Otajonova Sh, Xudoynazarova N), "
-        "Tarix (Allanazarova Z, Matqurbonova Sh, Matchanova Z, Sobirova G), "
-        "Fizika/Kimyo (Aminova M, Kurbonov O, Razzaqova K, Meylibayeva A), "
-        "Ingliz tili (Eshmurodova R, Farxodova M, Qo'shoqova G, Rajabova L, Raxmanova S, Sadullayeva D), "
-        "Rus tili (Bekmetova Sh, Bobojonova K, Saidova S, Sobirova N, Tillayeva A, Yusupova S), "
-        "Boshlang'ich (Bobojonova E, Maftuna, Jumanazarova N, Kenjayeva I, Normatova I, Nurmetova M, Otajonova S, Quryozova S, Ro'ziboyeva S, Sadiqova F, Saidmatova M, Saparmatova S, Xo'jayeva Sh), "
-        "Sport/San'at (Pirnnazarov N, Ro'zmetova M, Xudaynazarov D, Yusupova Z, O'razmetov O', Xusainov S, Otamuratov R, Sobirova M), "
-        "Texno/Info (Boltayeva Z, Eshchanova N, Matkarimova I, Matyoqubova X, Sobirov O, Quranboyeva N)."
+        "DIQQAT: Google haqida gapirma. Imlo xatolarisiz, rasmiy va aniq tilda javob ber. Ortiqcha gapirmasdan savolga to'liq javob ber."
+        "\n\n--- MA'MURIYAT ---"
+        "\nDirektor: Eshmetov Rustambay Ollaberganovich. O'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek. Administrator: Sabirova Iroda Yarash qizi."
+        "\n\n--- O'QITUVCHILAR RO'YXATI ---"
+        "\nMatematika: Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda."
+        "\nOna tili: Avazova Risolat, Bobojonova Mushtariy, Jumaniyozova Sadoqat, Otajonova Sharofat, Xudoynazarova Nafosat."
+        "\nIngliz tili: Eshmurodova Ra'no, Farxodova Muxtaram, Qo'shoqova Gulasal, Rajabova Lobar, Raxmanova So'najon, Sadullayeva Durdona."
+        "\nRus tili: Bekmetova Shaxnoza, Bobojonova Komila, Saidova Saragul, Sobirova Nozima, Tillayeva Aziza, Yusupova Sanobar."
+        "\nTarix: Allanazarova Zumrad, Matqurbonova Shohina, Matchanova Zebo, Sobirova Gulposhsha."
+        "\nFizika/Kimyo: Aminova Mehriniso, Kurbonov Ollashukur, Razzaqova Kumushoy, Meylibayeva Aziza."
+        "\nInformatika: Quranboyeva Nafosat."
+        "\nBoshlang'ich ta'lim: Bobojonova Elmira, Maftuna, Jumanazarova Nargiza, Kenjayeva Iroda, Normatova Iqbol, Nurmetova Marhabo, Otajonova Sarvinoz, Quryozova Sanobar, Ro'ziboyeva Sarvinoz, Sadiqova Farida, Saidmatova Muattar, Saparmatova Sadoqat, Xo'jayeva Shahnoza."
+        "\nSport: Pirnnazarov Nurali, Ro'zmetova Muhtarama, Xudaynazarov Davronbek, Yusupova Zuhraxon."
+        "\nMusiqa/San'at: O'razmetov O'tkir, Xusainov Sodiqjon, Otamuratov Rustam, Sobirova Maloxat."
+        "\nTexnologiya: Boltayeva Zebo, Eshchanova Nodira, Matkarimova Intizor, Matyoqubova Xusniobod, Sobirov Ollayor."
+        "\n\nMaktab 1982-yil 2-sentabrda tashkil etilgan. Manzil: Yangiariq tumani, Po'rsang mahallasi."
     )
     
     try:
@@ -54,9 +53,8 @@ def get_ai_response(prompt):
         )
         if response:
             res_str = str(response)
-            # Har qanday holatda ham Googleni aralashtirmaslik uchun:
             return res_str.replace("Google", "19-son maktab jamoasi").replace("Aria", "Maktab AI")
-        return "Xabar yuborishda xatolik yuz berdi."
+        return "Javob olishda xatolik yuz berdi."
     except Exception:
         return "Hozirda serverlar band, birozdan so'ng qayta urinib ko'ring."
 
@@ -68,21 +66,25 @@ for msg in st.session_state.messages:
     if "image" in msg:
         st.image(msg["image"], use_container_width=True)
 
-# --- Kirish maydoni (Yuborish tugmasi bilan) ---
-user_input = st.chat_input("Savol bering yoki rasm uchun 'Rasm: [tarif]' deb yozing...")
+# --- Kirish maydoni ---
+user_input = st.chat_input("Savol yozing yoki rasm uchun 'Rasm: [tarif]' deb yozing...")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
     
     # Rasm buyrug'ini tekshirish
-    if user_input.lower().startswith("rasm:") or user_input.lower().startswith("chiz:"):
-        img_desc = user_input.split(":", 1)[1].strip()
+    input_lower = user_input.lower()
+    if any(keyword in input_lower for keyword in ["rasm:", "chiz:", "rasm ber", "tasvirlab ber"]):
+        img_desc = user_input.replace("rasm:", "").replace("chiz:", "").replace("rasm ber", "").replace("tasvirlab ber", "").strip()
+        if not img_desc:
+            img_desc = "maktab binosi"
+            
         with st.spinner("Rasm tayyorlanmoqda..."):
             encoded = urllib.parse.quote(img_desc)
             img_url = f"https://image.pollinations.ai/prompt/school_style_{encoded}?width=1024&height=1024&nologo=true"
-            st.session_state.messages.append({"role": "ai", "content": f"'{img_desc}' uchun rasm tayyorlandi:", "image": img_url})
+            st.session_state.messages.append({"role": "ai", "content": f"Siz so'ragan '{img_desc}' rasmi tayyorlandi:", "image": img_url})
     else:
-        # Savol-javob qismi (Endi matematika va boshqa fanlarga javob beradi)
+        # Savol-javob qismi
         with st.spinner("Javob tayyorlanmoqda..."):
             answer = get_ai_response(user_input)
             st.session_state.messages.append({"role": "ai", "content": answer})
