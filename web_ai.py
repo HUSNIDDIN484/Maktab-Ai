@@ -5,19 +5,17 @@ import urllib.parse
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫")
 
-# --- MAJBURIY GRAFIKA VA FON ---
-# !important operatori orqali Streamlit'ning qora temasi bloklanadi
+# --- FON RASMI (Yonsei University) ---
 st.markdown("""
 <style>
     .stApp {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
-                          url("https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop") !important;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                          url("https://images.unsplash.com/photo-1622662914032-901e1494918e?q=80&w=2070&auto=format&fit=crop") !important;
         background-size: cover !important;
         background-position: center !important;
         background-attachment: fixed !important;
     }
 
-    /* Barcha konteynerlarni shaffof qilish */
     [data-testid="stHeader"], [data-testid="stAppViewBlockContainer"], .main {
         background-color: transparent !important;
     }
@@ -25,20 +23,20 @@ st.markdown("""
     .title { 
         color: white; 
         text-align: center; 
-        font-size: 40px; 
+        font-size: 38px; 
         font-weight: bold; 
-        text-shadow: 2px 2px 10px #000000;
+        text-shadow: 2px 2px 12px rgba(0,0,0,0.9);
         padding: 20px;
     }
 
     .user-msg { 
-        background-color: rgba(50, 50, 60, 0.9) !important; 
+        background-color: rgba(50, 50, 65, 0.85) !important; 
         padding: 15px; border-radius: 15px; margin: 10px 0; 
         border-right: 5px solid #3B8ED0; color: white;
     }
 
     .ai-msg { 
-        background-color: rgba(20, 20, 25, 0.9) !important; 
+        background-color: rgba(20, 20, 25, 0.85) !important; 
         padding: 15px; border-radius: 15px; 
         border-left: 5px solid #3B8ED0; margin: 10px 0; color: white;
     }
@@ -50,23 +48,24 @@ st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- USTOZLAR VA MA'MURIYAT ---
+# --- MA'MURIYAT VA USTOZLAR BAZASI ---
 def get_ai_response(prompt):
     system_instructions = (
-        "Sening isming - Maktab AI. 19-sonli maktab yordamchisisan. "
-        "Saparboyev Husniddin (8-B sinf) seni yaratgan. "
-        "DIQQAT: Google yoki boshqa kompaniyalar haqida gapirma. "
-        "Javoblar rasmiy va imlo xatolarisiz bo'lsin."
+        "Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan."
+        "Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan."
+        "DIQQAT: Google yoki boshqa kompaniyalar haqida gapirma. Rasmiy, aniq va imlo xatolarisiz javob ber."
+        
         "\n\n--- MA'MURIYAT ---"
         "\nDirektor: Eshmetov Rustambay Ollaberganovich."
         "\nO'rinbosarlar: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek."
         "\nAdministrator: Sabirova Iroda."
-        "\n\n--- O'QITUVCHILAR ---"
+        
+        "\n\n--- O'QITUVCHILAR RO'YXATI ---"
         "\nMatematika: Egamova R, Iskandarova D, Matkarimova M, Quramboyeva O, Xudaynazarova Z."
-        "\nOna tili: Avazova R, Bobojonova M, Jumaniyozova S, Otajonova Sh, Xudoynazarova N."
+        "\nOna tili va Adabiyot: Avazova R, Bobojonova M, Jumaniyozova S, Otajonova Sh, Xudoynazarova N."
         "\nIngliz tili: Eshmurodova R, Farxodova M, Qo'shoqova G, Rajabova L, Raxmanova S, Sadullayeva D."
         "\nRus tili: Bekmetova Sh, Bobojonova K, Saidova S, Sobirova N, Tillayeva A, Yusupova S."
-        "\nBoshlang'ich sinf: Bobojonova E, Jumanazarova N, Kenjayeva I, Normatova I, Nurmetova M, Otajonova S, Quryozova S, Ro'ziboyeva S, Sadiqova F, Saidmatova M, Saparmatova S, Xo'jayeva Sh."
+        "\nBoshlang'ich sinf o'qituvchilari: Bobojonova E, Jumanazarova N, Kenjayeva I, Normatova I, Nurmetova M, Otajonova S, Quryozova S, Ro'ziboyeva S, Sadiqova F, Saidmatova M, Saparmatova S, Xo'jayeva Sh."
     )
     
     try:
@@ -74,27 +73,21 @@ def get_ai_response(prompt):
             model=g4f.models.default,
             messages=[{"role": "system", "content": system_instructions}, {"role": "user", "content": prompt}],
         )
-        return str(response).replace("Google", "Maktab jamoasi")
+        # Tizim nomini to'g'rilash
+        return str(response).replace("Google", "Maktab jamoasi").replace("Aria", "Maktab AI")
     except:
-        return "Tizimda yuklama yuqori, qayta urinib ko'ring."
+        return "Hozirda tizim band, iltimos birozdan so'ng qayta urinib ko'ring."
 
-# --- CHAT ---
+# --- CHAT INTERFEYSI ---
 for msg in st.session_state.messages:
     role_class = "user-msg" if msg["role"] == "user" else "ai-msg"
     st.markdown(f'<div class="{role_class}"><b>{"Siz" if msg["role"] == "user" else "Maktab AI"}:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
-    if "image" in msg:
-        st.image(msg["image"])
 
-user_input = st.chat_input("Savol bering (Masalan: Matematika ustozlari kim?)...")
+user_input = st.chat_input("Savol yozing (Masalan: Direktorimiz kim?)...")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.spinner("Javob tayyorlanmoqda..."):
-        if "rasm:" in user_input.lower():
-            img_desc = user_input.lower().replace("rasm:", "").strip()
-            img_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(img_desc)}"
-            st.session_state.messages.append({"role": "ai", "content": f"'{img_desc}' rasmi:", "image": img_url})
-        else:
-            answer = get_ai_response(user_input)
-            st.session_state.messages.append({"role": "ai", "content": answer})
+        answer = get_ai_response(user_input)
+        st.session_state.messages.append({"role": "ai", "content": answer})
     st.rerun()
