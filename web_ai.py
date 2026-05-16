@@ -1,93 +1,79 @@
 import streamlit as st
 import g4f
-import base64
 
 # --- Sahifa sozlamalari ---
 st.set_page_config(page_title="19-son Maktab AI", page_icon="🏫", layout="wide")
 
-# --- FON RASMINI MAJBURIY QILISH (BASE64 USULI) ---
-# Bu yerda Yonsei universiteti binosi tasviri kod shakliga keltirilgan (Internet o'chgan bo'lsa ham ishlaydi)
-BG_IMAGE_BASE64 = (
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" 
-    # Izoh: Yuqoridagi Base64 qisqartma namuna. Quyida biz eng ishonchli ochiq URL dan foydalanamiz, 
-    # lekin agar u ham ishlamasa, CSS orqali standart chiroyli gradient fonni zaxira qilib qo'yamiz.
-)
-
+# --- QORA FONNI BUTUNLAY YO'Q QILUVCHI CSS MAJBURLASH ---
 st.markdown("""
     <style>
-    /* Streamlit asosiy fonini majburlash */
-    .stApp {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), 
-                          url("https://images.unsplash.com/photo-1623690184496-6e5414d79201?auto=format&fit=crop&w=1200&q=80") !important;
+    /* Streamlit ichidagi barcha mumkin bo'lgan fon qatlamlarini bittada rasmga almashtirish */
+    html, body, .stApp, .main, [data-testid="stAppViewBlockContainer"], [data-testid="stHeader"] {
+        background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), 
+                    url("https://images.unsplash.com/photo-1623690184496-6e5414d79201?q=80&w=2070&auto=format&fit=crop") !important;
         background-size: cover !important;
         background-position: center !important;
         background-attachment: fixed !important;
-        background-color: #1E293B !important; /* Agar rasm baribir yuklanmasa, qora emas, chiroyli to'q ko'k-kulrang fon bo'ladi */
     }
 
-    /* Barcha qora qatlamlarni tozalash va shaffof qilish */
-    [data-testid="stHeader"], 
-    [data-testid="stAppViewBlockContainer"], 
-    .main, 
-    .stChatMessage, 
-    [data-testid="stVerticalBlock"],
-    [data-testid="stChatInput"] {
+    /* Ichki vidjetlar (inputlar va bloklar) qorayib qolmasligi uchun ularni shaffof qilish */
+    [data-testid="stVerticalBlock"], .stChatMessage, [data-testid="stForm"], [data-testid="stChatInput"] {
         background-color: transparent !important;
         background: transparent !important;
     }
 
-    /* Sarlavha */
+    /* Sarlavha stili */
     .title { 
-        color: #FFFFFF !important; 
+        color: white !important; 
         text-align: center; 
         font-size: 45px; 
         font-weight: bold; 
-        text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.9); 
-        padding: 25px;
+        text-shadow: 3px 3px 15px rgba(0,0,0,1); 
+        padding: 20px;
     }
 
-    /* Shaffof xabarlar bloki */
+    /* AI va Foydalanuvchi xabarlari uchun maxsus chiroyli shaffof oyna effekti */
     .user-msg { 
         background-color: rgba(255, 255, 255, 0.12) !important; 
         padding: 15px; border-radius: 18px; margin: 12px 0; 
-        border-right: 6px solid #3B8ED0; color: #FFFFFF !important; 
+        border-right: 6px solid #3B8ED0; color: white !important; 
         backdrop-filter: blur(15px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
     .ai-msg { 
-        background-color: rgba(255, 255, 255, 0.05) !important; 
+        background-color: rgba(255, 255, 255, 0.04) !important; 
         padding: 15px; border-radius: 18px; 
         border-left: 6px solid #3B8ED0; margin: 12px 0; 
-        color: #FFFFFF !important; 
+        color: white !important; 
         backdrop-filter: blur(15px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
 
-    /* Kirish oynasi */
+    /* Kirish oynasi dizayni */
     .login-box {
-        background: rgba(15, 23, 42, 0.8) !important;
-        padding: 45px; border-radius: 30px; 
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.75) !important;
+        padding: 40px; border-radius: 25px; 
+        border: 1px solid rgba(255,255,255,0.2);
         text-align: center; max-width: 500px; 
-        margin: 80px auto; backdrop-filter: blur(20px);
+        margin: 100px auto; backdrop-filter: blur(20px);
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- TIZIM XOTIRASI ---
+# --- XOTIRA (SESSION STATE) ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "user_name" not in st.session_state:
     st.session_state.user_name = None
 
-# --- 1. KIRISH QISMI ---
+# --- 1. KIRISH OYNASI (ISM SO'RASH) ---
 if st.session_state.user_name is None:
     st.markdown('<p class="title">🏫 19-SON MAKTAB AI</p>', unsafe_allow_html=True)
     st.markdown('<div class="login-box">', unsafe_allow_html=True)
-    st.markdown("<h2 style='color:white; margin-bottom:20px;'>Xush kelibsiz!</h2>", unsafe_allow_html=True)
-    name = st.text_input("Suhbatni boshlash uchun ismingizni kiriting:", key="unique_login_key")
-    if st.button("Dasturga kirish"):
+    st.markdown("<h2 style='color:white; margin-bottom:15px;'>Xush kelibsiz!</h2>", unsafe_allow_html=True)
+    name = st.text_input("Suhbatni boshlash uchun ismingizni kiriting:", key="main_login_input")
+    if st.button("Kirish"):
         if name.strip():
             st.session_state.user_name = name.strip()
             st.rerun()
@@ -95,16 +81,16 @@ if st.session_state.user_name is None:
             st.warning("Iltimos, ismingizni yozing!")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- 2. CHAT QISMI ---
+# --- 2. CHAT OYNASI ---
 else:
-    st.markdown(f'<p class="title">Salom, {st.session_state.user_name}! 🏫</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="title">Salom, {st.session_state.user_name}! 👋</p>', unsafe_allow_html=True)
 
     def get_ai_response(prompt):
-        # TAQDOM ETILGAN BARCHA MA'LUMOTLAR BAZASI
+        # BARCHA TAQDIM ETILGAN MA'LUMOTLAR
         system_instructions = (
             f"Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. "
             f"Seni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan. "
-            f"Foydalanuvchi ismi: {st.session_state.user_name}. Har doim unga ismi bilan samimiy murojaat qil. "
+            f"Foydalanuvchi ismi: {st.session_state.user_name}. Unga har doim ismi bilan murojaat qil. "
             "DIQQAT: Google haqida gapirma. Imlo xatolarisiz, rasmiy va aniq tilda javob ber. Ortiqcha gapirmasdan savolga to'liq javob ber."
             
             "\n\n--- MA'MURIYAT ---"
@@ -127,7 +113,7 @@ else:
         )
 
         chat_context = [{"role": "system", "content": system_instructions}]
-        # Xotira funksiyasi (Oxirgi 5 ta xabarni uzatish)
+        # Xotira (oxirgi 5 ta xabarni uzatish)
         for msg in st.session_state.messages[-5:]:
             chat_context.append({"role": msg["role"], "content": msg["content"]})
         chat_context.append({"role": "user", "content": prompt})
@@ -136,16 +122,16 @@ else:
             response = g4f.ChatCompletion.create(model=g4f.models.default, messages=chat_context)
             return str(response).replace("Google", "Maktab jamoasi")
         except:
-            return f"Kechirasiz {st.session_state.user_name}, ulanishda uzilish bo'ldi. Iltimos qaytadan urinib ko'ring."
+            return f"Kechirasiz {st.session_state.user_name}, ulanishda biroz xatolik bo'ldi."
 
-    # Suhbat tarixini ekranga chiqarish (Shaffof dizaynda)
+    # Chat xabarlarini chiqarish
     for msg in st.session_state.messages:
         role_class = "user-msg" if msg["role"] == "user" else "ai-msg"
         sender = st.session_state.user_name if msg["role"] == "user" else "Maktab AI"
         st.markdown(f'<div class="{role_class}"><b>{sender}:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
 
-    # Savol kiritish maydoni
-    user_input = st.chat_input("Savolingizni bu yerga yozing...")
+    # Input (Kiritish)
+    user_input = st.chat_input("Savolingizni yozing...")
 
     if user_input:
         st.session_state.messages.append({"role": "user", "content": user_input})
