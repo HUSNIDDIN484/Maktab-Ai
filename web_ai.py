@@ -1,6 +1,6 @@
 import streamlit as st
 
-# 1. Sahifa sozlamalari (Brauzer sarlavhasi va ikonki)
+# 1. Sahifa sozlamalari
 st.set_page_config(
     page_title="19-son Maktab AI",
     page_icon="🏫",
@@ -8,93 +8,139 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Custom CSS stillari (Sintaksis xatolarini oldini olish uchun matn ko'rinishida)
-# Bu yerda siz xohlagan shaffoflik va zamonaviy dizayn elementlari kiritilgan
+# 2. Yonsei binosi foni va oyna (Blur) dizayni
 css_style = """
 <style>
-    /* Umumiy fon va matn sozlamalari */
     .stApp {
-        background-color: #0e1117;
-        color: #ffffff;
+        background: linear-gradient(rgba(14, 17, 23, 0.7), rgba(14, 17, 23, 0.85)), 
+                    url("https://images.unsplash.com/photo-1624200424564-94bc02bc9242?q=80&w=1920") no-repeat center center fixed;
+        background-size: cover;
     }
-    
-    /* Asosiy sarlavha stili */
+    .main-container {
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        margin-bottom: 25px;
+        text-align: center;
+    }
     .main-title {
         color: #ffffff; 
-        text-align: center; 
         font-size: 38px; 
-        font-weight: bold;
-        padding: 20px 0;
-        text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        margin-bottom: 10px;
+        text-shadow: 0px 4px 12px rgba(0, 0, 0, 0.7);
     }
-    
-    /* Salomlashish matni stili */
     .welcome-text {
-        color: #ffeb3b;
-        text-align: center;
+        color: #00e5ff;
         font-size: 24px;
         font-weight: 600;
-        margin-bottom: 30px;
+        letter-spacing: 0.5px;
     }
-
-    /* Qidiruv/Kiritish oynasining pastki qismda chiroyli turishi uchun (ixtiyoriy) */
-    .stChatInput {
-        border-radius: 10px;
+    .stChatInputContainer {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 15px !important;
     }
 </style>
 """
-
-# CSS-ni sahifaga yuklash (Faqat xavfsiz unsafe_allow_html=True parametri bilan)
 st.markdown(css_style, unsafe_allow_html=True)
 
-# 3. Session State (Foydalanuvchi ma'lumotlarini saqlash)
-# Foydalanuvchi ismini eslab qolish uchun o'zgaruvchini tekshiramiz
-if "username" not in st.session_state:
-    st.session_state.username = None
+# 3. Session State (Foydalanuvchi ma'lumotlari)
+if "user_name" not in st.session_state:
+    st.session_state.user_name = None
 
-# 4. Dasturning mantiqiy qismi (Oynalar almashinuvi)
-if st.session_state.username is None:
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# 4. Ilova oynalari boshqaruvi
+if st.session_state.user_name is None:
     # --- 1-Oyna: Ism so'rash oynasi ---
-    st.markdown('<div class="main-title">🏫 19-SON MAKTAB AI</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-container"><div class="main-title">🏫 19-SON MAKTAB AI</div></div>', unsafe_allow_html=True)
     
-    # Ismni kiritish inputi
     ism = st.text_input("Iltimos, ismingizni kiriting:", key="name_input", placeholder="Ismingiz...")
     
     if st.button("Kirish"):
         if ism.strip():
-            st.session_state.username = ism.strip()
-            st.rerun() # Sahifani yangilab, chat oynasiga o'tish
+            st.session_state.user_name = ism.strip()
+            st.rerun()
         else:
             st.error("Ism bo'sh bo'lishi mumkin emas!")
 
 else:
     # --- 2-Oyna: Asosiy Chat interfeysi ---
-    # Sarlavha
-    st.markdown('<div class="main-title">🏫 19-SON MAKTAB AI</div>', unsafe_allow_html=True)
-    
-    # Foydalanuvchini ismi bilan qutlash
-    st.markdown(f'<div class="welcome-text">Salom, {st.session_state.username}! 👋</div>', unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="main-container">
+        <div class="main-title">🏫 19-SON MAKTAB AI</div>
+        <div class="welcome-text">Salom, {st.session_state.user_name}! 👋</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Chat xabarlari tarixi uchun konteyner (agar kerak bo'lsa)
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    # Oldingi xabarlarni ekranga chiqarish
+    # Oldingi chat xabarlarini chiqarish
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Savol yozish paneli (Pastki qismda chiqadi)
+    # Chat yozish paneli
     if prompt := st.chat_input("Savolingizni yozing..."):
-        # Foydalanuvchi savolini ekranga chiqarish
         with st.chat_message("user"):
             st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        # Bu yerga sun'iy intellekt javob berish mantiqini (Maktab AI modelini) ulashingiz mumkin
-        response = f"Rahmat {st.session_state.username}, savolingiz qabul qilindi. Tez orada javob beraman!"
+        # --- Ma'lumotlarni qidirish va tahlil qilish tizimi ---
+        query = prompt.lower()
+        response = ""
+
+        # Rahbariyat va ma'muriyat bo'yicha qidiruv
+        if "direktor" in query:
+            response = f"{st.session_state.user_name}, maktabimiz direktori — Eshmetov Rustambay Ollaberganovich."
+        elif "o'rinbosar" in query or "zavuch" in query or "ma'naviyat" in query:
+            response = f"{st.session_state.user_name}, maktab direktor o'rinbosarlari: Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek."
+        elif "administrator" in query or "admin" in query:
+            response = f"{st.session_state.user_name}, maktab administratorimiz: Sabirova Iroda Yarash qizi."
         
-        # AI javobini ekranga chiqarish
+        # Fan o'qituvchilari bo'yicha qidiruv
+        elif "matematika" in query:
+            response = f"{st.session_state.user_name}, matematika fani o'qituvchilari: Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda."
+        elif "ona tili" in query or "adabiyot" in query:
+            response = f"{st.session_state.user_name}, ona tili va adabiyot fani o'qituvchilari: Avazova Risolat, Bobojonova Mushtariy, Jumaniyozova Sadoqat, Otajonova Sharofat, Xudoynazarova Nafosat."
+        elif "ingliz tili" in query or "ingliz" in query or "english" in query:
+            response = f"{st.session_state.user_name}, ingliz tili fani o'qituvchilari: Eshmurodova Ra'no, Farxodova Muxtaram, Qo'shoqova Gulasal, Rajabova Lobar, Raxmanova So'najon, Sadullayeva Durdona."
+        elif "rus tili" in query or "rus" in query:
+            response = f"{st.session_state.user_name}, rus tili fani o'qituvchilari: Bekmetova Shaxnoza, Bobojonova Komila, Saidova Saragul, Sobirova Nozima, Tillayeva Aziza, Yusupova Sanobar."
+        elif "tarix" in query or "huquq" in query:
+            response = f"{st.session_state.user_name}, tarix fani o'qituvchilari: Allanazarova Zumrad, Matqurbonova Shohina, Matchanova Zebo, Sobirova Gulposhsha."
+        elif "fizika" in query or "kimyo" in query:
+            response = f"{st.session_state.user_name}, fizika va kimyo fani o'qituvchilari: Aminova Mehriniso, Kurbonov Ollashukur, Razzaqova Kumushoy, Meylibayeva Aziza."
+        elif "informatika" in query:
+            response = f"{st.session_state.user_name}, informatika fani o'qituvchilari: Quranboyeva Nafosat, Sabirova Iroda."
+        elif "boshlang'ich" in query or "sinf o'qituvchi" in query:
+            response = f"{st.session_state.user_name}, boshlang'ich ta'lim o'qituvchilari: Bobojonova Elmira, Maftuna, Jumanazarova Nargiza, Kenjayeva Iroda, Normatova Iqbol, Nurmetova Marhabo, Otajonova Sarvinoz, Quryozova Sanobar, Ro'ziboyeva Sarvinoz, Sadiqova Farida, Saidmatova Muattar, Saparmatova Sadoqat, Xo'jayeva Shahnoza."
+        elif "sport" in query or "jismoniy" in query or "fizra" in query:
+            response = f"{st.session_state.user_name}, sport (jismoniy tarbiya) fani o'qituvchilari: Pirnnazarov Nurali, Ro'zmetova Muhtarama, Xudaynazarov Davronbek, Yusupova Zuhraxon."
+        elif "musiqa" in query or "san'at" in query or "tasviriy" in query:
+            response = f"{st.session_state.user_name}, musiqa va san'at fani o'qituvchilari: O'razmetov O'tkir, Xusainov Sodiqjon, Otamuratov Rustam, Sobirova Maloxat."
+        elif "texnologiya" in query or "mehnat" in query:
+            response = f"{st.session_state.user_name}, texnologiya fani o'qituvchilari: Boltayeva Zebo, Eshchanova Nodira, Matkarimova Intizor, Matyoqubova Xusniobod, Sobirov Ollayor."
+        
+        # Maktab tarixi va manzili bo'yicha qidiruv
+        elif "tashkil" in query or "tarixi" in query or "qachon" in query:
+            response = f"{st.session_state.user_name}, maktabimiz 1982-yil 2-sentabrda tashkil etilgan."
+        elif "manzil" in query or "qayerda" in query or "joylashgan" in query:
+            response = f"{st.session_state.user_name}, maktabimiz Xorazm viloyati, Yangiariq tumani, Po'rsang mahallasida joylashgan. Shuningdek, u Qo'riqtom qishlog'idagi 19-sonli maktab hisoblanadi."
+        elif "yaratgan" in query or "muallif" in query or "kim yaratdi" in query:
+            response = f"{st.session_state.user_name}, meni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan."
+            
+        # Standart xushmuomalalik yoki umumiy savol
+        else:
+            response = f"Sening isming - Maktab AI. Sen Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisisan. Men faqat maktabimiz tarixi, ma'muriyati va o'qituvchilari haqidagi savollaringizga rasmiy, aniq hamda to'liq javob bera olaman, {st.session_state.user_name}."
+
+        # AI javobini chiqarish va tarixga yozish
         with st.chat_message("assistant"):
             st.markdown(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
