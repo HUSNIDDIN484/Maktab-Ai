@@ -1,4 +1,2 @@
-streamlit
-g4f
-curl_cffi
-nest_asyncio
+beautifulsoup4
+requests
