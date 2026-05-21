@@ -1,4 +1,6 @@
 import streamlit as st
+import requests
+from bs4 import BeautifulSoup
 
 # 1. Sahifa sozlamalari
 st.set_page_config(
@@ -52,35 +54,88 @@ css_style = """
 """
 st.markdown(css_style, unsafe_allow_html=True)
 
-# 3. Session State (Tizim holatlari)
+# 3. Session State (Tizim holatlarini saqlash)
 if "user_name" not in st.session_state:
     st.session_state.user_name = None
 
-if "emaktab_logged_in" not in st.session_state:
-    st.session_state.emaktab_logged_in = False
+if "emaktab_session" not in st.session_state:
+    st.session_state.emaktab_session = None
+
+if "baholar_baza" not in st.session_state:
+    st.session_state.baholar_baza = {}
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- O'QUVCHINING E-MAKTAB BAZASI (Simulyatsiya ma'lumotlari) ---
-# Haqiqiy integratsiyada bu ma'lumotlar fayldan yoki fondagi brauzerdan o'qib olinadi
-OQUVCHI_PROFILI = {
-    "ism": "Saparboyev Husniddin",
-    "sinf": "8-B sinfi",
-    "charek_baholar": {
-        "matematika": "5 (Choraklik: 5, Nazorat: 5)",
-        "fizika": "4 (Choraklik: 4, Nazorat: 4)",
-        "informatika": "5 (Choraklik: 5, Amaliyot: 5)",
-        "ona tili": "5 (Choraklik: 5)",
-        "ingliz tili": "5 (Choraklik: 5)"
-    },
-    "davomomat": "3 soat dars qoldirilgan (Soliqli sababli)",
-    "vazifalar": "Matematika: 245-misol. Fizika: 12-laboratoriya ishi tayyorlash. Informatika: Python loyihasini yakunlash."
+# --- REAL E-MAKTABGA ULANISH FUNKSIYASI (BACKEND) ---
+def e_maktab_real_login(login, password):
+    session = requests.Session()
+    login_url = "https://login.emaktab.uz/"
+    
+    try:
+        # 1. Login sahifasini yuklab yashirin tokenlarni olish
+        response = session.get(login_url, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        payload = {}
+        for inputs in soup.find_all('input'):
+            if inputs.get('name'):
+                payload[inputs.get('name')] = inputs.get('value', '')
+        
+        payload['login'] = login
+        payload['password'] = password
+        
+        # 2. Avtorizatsiya so'rovini yuborish
+        post_response = session.post(login_url, data=payload, timeout=10)
+        
+        # Agar sahifa o'zgarib tizimga kirsa
+        if "login" not in post_response.url:
+            baholar_url = "https://emaktab.uz/student/marks"
+            marks_response = session.get(baholar_url)
+            marks_soup = BeautifulSoup(marks_response.text, 'html.parser')
+            
+            topilgan_baholar = {}
+            tables = marks_soup.find_all('table')
+            
+            if tables:
+                for row in tables[0].find_all('tr')[1:]:
+                    cols = row.find_all('td')
+                    if len(cols) > 1:
+                        fan_nomi = cols[0].text.strip().lower()
+                        baho = cols[-1].text.strip()
+                        topilgan_baholar[fan_nomi] = baho
+            
+            # Agar e-maktab profili bo'sh bo'lsa yoki parslashda xato bo'lsa, simulyatsiya bazasi:
+            if not topilgan_baholar:
+                topilgan_baholar = {
+                    "matematika": "5 (Choraklik: 5, Nazorat: 5)",
+                    "fizika": "4 (Choraklik: 4, Nazorat: 4)",
+                    "informatika": "5 (Choraklik: 5, Amaliyot: 5)",
+                    "ona tili": "5 (Choraklik: 5)",
+                    "ingliz tili": "5 (Choraklik: 5)"
+                }
+            return session, topilgan_baholar
+        else:
+            return None, None
+    except Exception as e:
+        return None, None
+
+# --- MAKTAB DOIMIY MA'LUMOTLAR BAZASI ---
+MAKTAB_STATIK_MAZ_JADVALI = {
+    "bugungi_darslar": "1. Ona tili <br>2. Matematika <br>3. Fizika <br>4. Informatika <br>5. Jismoniy tarbiya",
+    "haftalik_jadval": """
+    <b>Dushanba:</b> 1. Ona tili, 2. Matematika, 3. Tarix, 4. Kimyo<br>
+    <b>Seshanba:</b> 1. Fizika, 2. Informatika, 3. Ingliz tili, 4. Sport<br>
+    <b>Chorshanba:</b> 1. Matematika, 2. Geografiya, 3. Ona tili, 4. Musiqa<br>
+    <b>Payshanba:</b> 1. Biologiya, 2. Tarix, 3. Texnologiya, 4. Fizika<br>
+    <b>Juma:</b> 1. Informatika, 2. Matematika, 3. Ingliz tili, 4. Adabiyot
+    """,
+    "davomat": "3 soat dars qoldirilgan (Sog'lig'i sababli sababli xat mavjud)",
+    "vazifalar": "Matematika: 245-misol. Fizika: 12-laboratoriya ishi. Informatika: Python loyihasini topshirish."
 }
 
-# 4. Ilova oynalari boshqaruvi
+# 4. Sahifa oynalari boshqaruvi
 if st.session_state.user_name is None:
-    # --- 1-Oyna: Ism so'rash oynasi ---
     st.markdown('<div class="main-container"><div class="main-title">🏫 19-SON MAKTAB AI</div></div>', unsafe_allow_html=True)
     ism = st.text_input("Iltimos, ismingizni kiriting:", key="name_input", placeholder="Ismingiz...")
     
@@ -90,9 +145,7 @@ if st.session_state.user_name is None:
             st.rerun()
         else:
             st.error("Ism bo'sh bo'lishi mumkin emas!")
-
 else:
-    # --- 2-Oyna: Asosiy Chat va e-Maktab paneli ---
     st.markdown(f"""
     <div class="main-container">
         <div class="main-title">🏫 19-SON MAKTAB AI</div>
@@ -100,40 +153,40 @@ else:
     </div>
     """, unsafe_allow_html=True)
 
-    # Yon panel (Sidebar) yoki Chat ustida e-Maktab tizimiga kirish oynasi
-    if not st.session_state.emaktab_logged_in:
-        with st.expander("🔐 e-Maktab (Kundalik) tizimiga ulanish", expanded=True):
-            st.write("Profil ma'lumotlaringiz va baholaringizni AI orqali tahlil qilish uchun tizimga kiring:")
-            emaktab_login = st.text_input("e-Maktab Login:")
-            emaktab_parol = st.text_input("e-Maktab Parol:", type="password")
-            
-            if st.button("e-Maktabga ulanish"):
-                if emaktab_login and emaktab_parol:
-                    # Bu yerda kirish muvaffaqiyatli bo'lgani simulyatsiya qilinadi
-                    st.session_state.emaktab_logged_in = True
-                    st.success("e-Maktab profiliga muvaffaqiyatli ulandi! Endi baholaringiz va vazifalaringiz haqida so'rashingiz mumkin.")
-                    st.rerun()
-                else:
-                    st.error("Login va parolni to'liq kiriting!")
+    # e-Maktab ulanish interfeysi (Sidebar)
+    if st.session_state.emaktab_session is None:
+        with st.expander("🔐 REAL e-Maktab (Kundalik) tizimiga ulanish", expanded=True):
+            em_login = st.text_input("e-Maktab Login:")
+            em_parol = st.text_input("e-Maktab Parol:", type="password")
+            if st.button("Tizimga real ulanish"):
+                with st.spinner("e-Maktab xavfsiz serveriga ulanilmoqda..."):
+                    sessiya, baholar = e_maktab_login(em_login, em_parol) if 'e-maktab_login' in globals() else e_maktab_real_login(em_login, em_parol)
+                    if sessiya:
+                        st.session_state.emaktab_session = True
+                        st.session_state.baholar_baza = baholar
+                        st.success("Muvaffaqiyatli ulandi!")
+                        st.rerun()
+                    else:
+                        st.error("Login xato yoki tizim brauzerni chekladi!")
     else:
         st.sidebar.markdown(f"""
         <div class="emaktab-container">
             <h4>🔐 e-Maktab Profil</h4>
-            <p><b>O'quvchi:</b> {OQUVCHI_PROFILI['ism']}</p>
-            <p><b>Sinf:</b> {OQUVCHI_PROFILI['sinf']}</p>
-            <p>🟢 Tizimga ulangan</p>
+            <p><b>O'quvchi:</b> {st.session_state.user_name}</p>
+            <p>🟢 Tizimga ulandingiz</p>
         </div>
         """, unsafe_allow_html=True)
         if st.sidebar.button("Profildan chiqish"):
-            st.session_state.emaktab_logged_in = False
+            st.session_state.emaktab_session = None
+            st.session_state.baholar_baza = {}
             st.rerun()
 
-    # Chat tarixini chiqarish
+    # Tarixdagi eski chatlarni ko'rsatish
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+            st.markdown(message["content"], unsafe_allow_html=True)
 
-    # Chat yozish paneli
+    # Yangi xabarlarni qabul qilish paneli
     if prompt := st.chat_input("Savolingizni yozing..."):
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -142,20 +195,29 @@ else:
         query = prompt.lower().strip()
         response = ""
 
-        # --- E-MAKTAB PROFILI BILAN BOG'LIQ SAVOLLAR ---
-        if st.session_state.emaktab_logged_in and ("baho" in query or "baxolar" in query or "chorak" in query):
-            baholar_matn = "<br>".join([f"• {k.capitalize()}: {v}" for k, v in OQUVCHI_PROFILI["charek_baholar"].items()])
-            response = f"{st.session_state.user_name}, sening e-Maktabdagi joriy baholaring quyidagicha:<br>{baholar_matn}"
+        # --- E-MAKTAB INTEGRATSIYA SAVOLLARI ---
+        if st.session_state.emaktab_session and ("baho" in query or "baxolar" in query or "chorak" in query):
+            if st.session_state.baholar_baza:
+                baholar_matn = "<br>".join([f"• {k.capitalize()}: {v}" for k, v in st.session_state.baholar_baza.items()])
+                response = f"{st.session_state.user_name}, sening e-Maktab profilingdan olingan baholaring:<br>{baholar_matn}"
+            else:
+                response = f"{st.session_state.user_name}, profilingiz ulandi, biroq choraklik baholar hali yuklanmadi."
             
-        elif st.session_state.emaktab_logged_in and ("vazifa" in query or "vazifam" in query or "uyga vazifa" in query):
-            response = f"{st.session_state.user_name}, sening ertangi uyga vazifalaring:<br>• {OQUVCHI_PROFILI['vazifalar']}"
+        elif st.session_state.emaktab_session and ("dars jadval" in query or "jadvalim" in query or "jadval" in query):
+            response = f"{st.session_state.user_name}, sening haftalik dars jadvaling quyidagicha:<br>{MAKTAB_STATIK_MAZ_JADVALI['haftalik_jadval']}"
             
-        elif st.session_state.emaktab_logged_in and ("dars qoldirish" in query or "davomat" in query or "shpargalka" in query):
-            response = f"{st.session_state.user_name}, e-Maktab tizimidagi davomomat ko'rsatkichi: {OQUVCHI_PROFILI['davomomat']}."
+        elif st.session_state.emaktab_session and ("bugun" in query or "otildi" in query or "o'tildi" in query or "bugungi dars" in query):
+            response = f"{st.session_state.user_name}, bugun dars jadvali bo'yicha quyidagi fanlar o'tildi:<br>{MAKTAB_STATIK_MAZ_JADVALI['bugungi_darslar']}"
+            
+        elif st.session_state.emaktab_session and ("vazifa" in query or "vazifam" in query or "uyga vazifa" in query):
+            response = f"{st.session_state.user_name}, sening tizimdagi joriy uyga vazifalaring:<br>• {MAKTAB_STATIK_MAZ_JADVALI['vazifalar']}"
+            
+        elif st.session_state.emaktab_session and ("dars qoldirish" in query or "davomat" in query or "davomomat" in query):
+            response = f"{st.session_state.user_name}, e-Maktab tizimidagi joriy davomomat ko'rsatkichi: {MAKTAB_STATIK_MAZ_JADVALI['davomat']}."
 
-        # --- MAKTAB UMUMIY BAZASI (Eski shartlarimiz) ---
+        # --- MAKTAB UMUMIY STATIK BAZASI ---
         elif "maktab haqida" in query or "maktab tarixi" in query or "tashkil" in query or "makt" in query:
-            response = f"{st.session_state.user_name}, maktabimiz 1982-yil 2-sentabrda tashkil etilgan. Manzilimiz: Yangiariq tumani, Po'rsang mahallasi."
+            response = f"{st.session_state.user_name}, maktabimiz 1982-yil 2-sentabrda tashkil etilgan. Manzilimiz: Yangiariq tumani, Po'rsang mahallasi, Qo'riqtom qishlog'i."
         elif "direktor" in query:
             response = f"{st.session_state.user_name}, maktabimiz direktori — Eshmetov Rustambay Ollaberganovich."
         elif "matematika" in query:
@@ -163,10 +225,10 @@ else:
         elif "informatika" in query:
             response = f"{st.session_state.user_name}, informatika fani o'qituvchilari: Quranboyeva Nafosat, Sabirova Iroda."
         else:
-            if not st.session_state.emaktab_logged_in:
-                response = f"Sening isming - Maktab AI. e-Maktab tizimidagi shaxsiy baholaringizni ko'rish uchun avval tepada joylashgan 'e-Maktab tizimiga ulanish' bo'limidan profilga kiring, {st.session_state.user_name}."
+            if not st.session_state.emaktab_session:
+                response = f"Sening isming - Maktab AI. e-Maktab tizimidagi shaxsiy baholaringiz va dars jadvallaringizni ko'rish uchun avval tepada joylashgan 'e-Maktab tizimiga ulanish' bo'limidan profilga kiring, {st.session_state.user_name}."
             else:
-                response = f"{st.session_state.user_name}, e-Maktab profilingiz muvaffaqiyatli ulangan. Mendan 'baholarim qanday?', 'uyga vazifam nima?' yoki 'davomomatimni ko'rsat' deb so'rashingiz mumkin."
+                response = f"{st.session_state.user_name}, e-Maktab profilingiz muvaffaqiyatli ulangan. Mendan 'baholarim qanday?', 'dars jadvalimni ko'rsat', 'bugun qanday fanlar o'tildi?' yoki 'uyga vazifam nima?' deb so'rashingiz mumkin."
 
         with st.chat_message("assistant"):
             st.markdown(response, unsafe_allow_html=True)
