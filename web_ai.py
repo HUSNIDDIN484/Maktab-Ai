@@ -84,12 +84,10 @@ else:
                         saqlangan_qatorlar = []
                         
                         for index, row in df.iterrows():
-                            # Qatordagi ma'lumotlarni chiroyli formatda yig'amiz
                             elementlar = []
                             for k, v in row.items():
                                 if pd.notna(v):
                                     v_str = str(v).strip()
-                                    # Ustun nomlariga qarab chiroyli o'zbekcha nom beramiz
                                     if "Unnamed: 1" in str(k): k_name = "Fan"
                                     elif "Unnamed: 2" in str(k): k_name = "Baho"
                                     elif "Unnamed: 3" in str(k): k_name = "Vazifa"
@@ -123,39 +121,49 @@ else:
         
         query = prompt.lower().strip()
         response = ""
-        bugun = bugungi_hafta_kuni()
+        
+        # Qidirilayotgan kunni aniqlaymiz
+        maqsad_kun = None
+        hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
+        
+        # Savol ichidan aniq hafta kuni so'ralganini tekshiramiz
+        for kun in xafta_kunlari:
+            if kun in query:
+                maqsad_kun = kun.capitalize()
+                break
+        
+        # Agar savolda aniq kun bo'lmasa-yu, lekin "bugun" so'zi bo'lsa, tizim kunini olamiz
+        if maqsad_kun is None and ("bugun" in query or "darslarim" in query or "darsni" in query):
+            maqsad_kun = bugungi_hafta_kuni()
 
-        # --- YANGI KUCHAYTIRILGAN BUGUNGI DARSLAR FILTRI ---
-        if st.session_state.excel_rows is not None and ("bugun" in query or "darslarim" in query or "darsni" in query):
+        # --- UNIVERSAL DINAMIK KUN FILTRI ---
+        if st.session_state.excel_rows is not None and maqsad_kun is not None:
             topilgan_darslar = []
             kun_topildi = False
             sanoq = 0
             
             for qator in st.session_state.excel_rows:
-                # Agar bugungi kun nomi (masalan, Juma) topilsa, belgini True qilamiz
-                if bugun.lower() in qator.lower():
+                if maqsad_kun.lower() in qator.lower():
                     kun_topildi = True
                     topilgan_darslar.append(qator)
                     continue
                 
-                # Kun topilgandan keyingi keladigan dars qatorlarini yig'amiz
                 if kun_topildi:
-                    # Agar keyingi satrda yangi kun boshlansa (masalan Shanba yoki Dushanba), to'xtaymiz
-                    if "dushanba" in qator.lower() or "seshanba" in qator.lower() or "chorshanba" in qator.lower() or "payshanba" in qator.lower() or "juma" in qator.lower() or "shanba" in qator.lower():
+                    # Agar keyingi satrda boshqa yangi kun sarlavhasi boshlansa, qidiruvni to'xtatamiz
+                    if any(k in qator.lower() for k in hafta_kunlari):
                         break
                     
-                    if qator.strip() and sanoq < 7: # Maksimal 7 ta darsni oladi
+                    if qator.strip() and sanoq < 7:
                         topilgan_darslar.append(qator)
                         sanoq += 1
             
             if topilgan_darslar:
                 darslar_html = "<br>".join([f"• {d}" for d in topilgan_darslar])
-                response = f"{st.session_state.user_name}, <b>bugun haftaning {bugun} kuni</b>. Excel faylingdan olingan bugungi darslar jadvali va vazifalar:<br><br>{darslar_html}"
+                response = f"{st.session_state.user_name}, Excel faylingdan olingan <b>{maqsad_kun}</b> kunidagi darslar jadvali va vazifalar:<br><br>{darslar_html}"
             else:
-                yaqin_darslar = "<br>".join([f"• {d}" for d in st.session_state.excel_rows[:6]])
-                response = f"{st.session_state.user_name}, bugun haftaning {bugun} kuni. Fayldan kunni ajratishda xato bo'ldi, lekin umumiy jadval mana:<br><br>{yaqin_darslar}"
+                response = f"{st.session_state.user_name}, afsuski Excel faylingiz ichidan <b>{maqsad_kun}</b> kuniga doir darslar topilmadi yoki bu kuni darslar yo'q."
 
-        # --- BOSHQA SAVOLLAR ---
+        # --- BOSHQA STATIK SAVOLLAR ---
         elif st.session_state.excel_rows is not None and ("baho" in query or "baxolar" in query or "hamma" in query or "jadval" in query):
             hamma_matn = "<br>".join([f"• {d}" for d in st.session_state.excel_rows[:15]])
             response = f"{st.session_state.user_name}, sening yuklangan faylingdagi ma'lumotlar:<br>{hamma_matn}"
@@ -168,7 +176,7 @@ else:
             if st.session_state.excel_rows is None:
                 response = f"e-Maktab ma'lumotlarini ko'rish uchun avval fayl yuklang."
             else:
-                response = f"{st.session_state.user_name}, e-Maktab ma'lumotlaringiz yuklangan. Mendan 'bugungi darslarimni ayt' deb so'rang."
+                response = f"{st.session_state.user_name}, e-Maktab ma'lumotlaringiz yuklangan. Mendan istalgan hafta kuningizni (masalan: 'Dushanba kungi darslarim') so'rashingiz mumkin."
 
         with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": response})
