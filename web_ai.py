@@ -122,17 +122,15 @@ else:
         query = prompt.lower().strip()
         response = ""
         
-        # Qidirilayotgan kunni aniqlaymiz
+        # Qidirilayotgan kunni aniqlaymiz (Imlo xatosi to'g'rilandi: hafta_kunlari)
         maqsad_kun = None
         hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
         
-        # Savol ichidan aniq hafta kuni so'ralganini tekshiramiz
-        for kun in xafta_kunlari:
+        for kun in hafta_kunlari:
             if kun in query:
                 maqsad_kun = kun.capitalize()
                 break
         
-        # Agar savolda aniq kun bo'lmasa-yu, lekin "bugun" so'zi bo'lsa, tizim kunini olamiz
         if maqsad_kun is None and ("bugun" in query or "darslarim" in query or "darsni" in query):
             maqsad_kun = bugungi_hafta_kuni()
 
@@ -149,7 +147,6 @@ else:
                     continue
                 
                 if kun_topildi:
-                    # Agar keyingi satrda boshqa yangi kun sarlavhasi boshlansa, qidiruvni to'xtatamiz
                     if any(k in qator.lower() for k in hafta_kunlari):
                         break
                     
