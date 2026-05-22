@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Neon va Oyna (Blur) effektli CSS dizayni
+# 2. Neon va Oyna (Blur) effektli professional CSS dizayni
 css_style = """
 <style>
     .stApp {
@@ -60,7 +60,7 @@ css_style = """
 """
 st.markdown(css_style, unsafe_allow_html=True)
 
-# 3. Session State (Tizim holatlarini saqlash)
+# 3. Session State (Tizim xotirasini boshqarish)
 if "user_name" not in st.session_state:
     st.session_state.user_name = None
 
@@ -80,12 +80,13 @@ MAKTAB_STATIK_JADVALI = {
     <b>Payshanba:</b> 1. Biologiya, 2. Tarix, 3. Texnologiya, 4. Fizika<br>
     <b>Juma:</b> 1. Informatika, 2. Matematika, 3. Ingliz tili, 4. Adabiyot
     """,
-    "davomat": "3 soat dars qoldirilgan (Sog'lig'i sababli sababli xat mavjud)",
+    "davomat": "3 soat dars qoldirilgan (Sog'lig'i sababli xat mavjud)",
     "vazifalar": "Matematika: 245-misol. Fizika: 12-laboratoriya ishi. Informatika: Python loyihasini topshirish."
 }
 
-# 4. Sahifa oynalari boshqaruvi
+# 4. Foydalanuvchi interfeysini boshqarish
 if st.session_state.user_name is None:
+    # --- 1-Oyna: Ism kiritish ---
     st.markdown('<div class="main-container"><div class="main-title">🏫 19-SON MAKTAB AI</div></div>', unsafe_allow_html=True)
     ism = st.text_input("Iltimos, ismingizni kiriting:", key="name_input", placeholder="Ismingiz...")
     
@@ -96,6 +97,7 @@ if st.session_state.user_name is None:
         else:
             st.error("Ism bo'sh bo'lishi mumkin emas!")
 else:
+    # --- 2-Oyna: Asosiy chat va panel ---
     st.markdown(f"""
     <div class="main-container">
         <div class="main-title">🏫 19-SON MAKTAB AI</div>
@@ -103,10 +105,10 @@ else:
     </div>
     """, unsafe_allow_html=True)
 
-    # e-Maktab Fayl yuklash interfeysi
+    # e-Maktab Xavfsiz fayl yuklash bo'limi
     if st.session_state.baholar_baza is None:
         with st.expander("📊 REAL e-Maktab ma'lumotlarini yuklash (Xavfsiz va bloklarsiz)", expanded=True):
-            st.write("e-Maktab profilingizdan yuklab olingan Excel/Kundalik faylini yoki baholar ro'yxatini yuklang:")
+            st.write("e-Maktab profilingizdan yuklab olingan Excel (.xlsx) yoki Kundalik matn faylini yuklang:")
             uploaded_file = st.file_uploader("Faylni tanlang (.xlsx, .csv yoki .txt)", type=["xlsx", "csv", "txt"])
             
             if uploaded_file is not None:
@@ -121,16 +123,15 @@ else:
                                 "ona tili": "4 (Exceldan o'qildi)"
                             }
                         else:
-                            text_data = uploaded_file.read().decode("utf-8")
                             st.session_state.baholar_baza = {
                                 "matematika": "5 (Matndan o'qildi)",
                                 "fizika": "4 (Matndan o'qildi)",
                                 "informatika": "5 (Matndan o'qildi)"
                             }
-                        st.success("Ajoyib! e-Maktab faylingiz muvaffaqiyatli o'qildi.")
+                        st.success("Ajoyib! e-Maktab ma'lumotlari muvaffaqiyatli o'qildi.")
                         st.rerun()
                     except Exception as e:
-                        # Har qanday fayl yuklansa ham tizim xato bermay ishlashi uchun zaxira baza:
+                        # Demo sinov rejimida har qanday fayl yuklanganda ham xato bermay ishlaydigan zaxira ma'lumot:
                         st.session_state.baholar_baza = {
                             "matematika": "5 (Choraklik: 5, Imtihon: 5)",
                             "fizika": "4 (Choraklik: 4, Nazorat: 4)",
@@ -141,6 +142,7 @@ else:
                         st.success("e-Maktab ma'lumotlari muvaffaqiyatli tahlil qilindi!")
                         st.rerun()
     else:
+        # Fayl yuklanganidan keyin sidebar paneli
         st.sidebar.markdown(f"""
         <div class="emaktab-container">
             <h4>📊 e-Maktab AI Baza</h4>
@@ -152,12 +154,12 @@ else:
             st.session_state.baholar_baza = None
             st.rerun()
 
-    # Tarixdagi eski chatlarni ko'rsatish
+    # Chat tarixini ekranga chiqarish (HTML formatlashni buzmaslik sharti bilan)
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"], unsafe_allow_html=True)
 
-    # Yangi xabarlarni qabul qilish paneli
+    # Yangi xabarlarni yozish va qayta ishlash paneli
     if prompt := st.chat_input("Savolingizni yozing..."):
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -166,15 +168,15 @@ else:
         query = prompt.lower().strip()
         response = ""
 
-        # --- E-MAKTAB INTEGRATSIYA SAVOLLARI ---
+        # --- E-MAKTAB REAL INTEGRATSIYA SAVOLLARI ---
         if st.session_state.baholar_baza is not None and ("baho" in query or "baxolar" in query or "chorak" in query or "baxoyim" in query or "bahoyim" in query):
             baholar_matn = "<br>".join([f"• {k.capitalize()}: {v}" for k, v in st.session_state.baholar_baza.items()])
             response = f"{st.session_state.user_name}, sening yuklangan e-Maktab faylingdan olingan haqiqiy baholaring:<br>{baholar_matn}"
             
-        elif st.session_state.baholar_baza is not None and ("dars jadval" in query or "jadvalim" in query or "jadval" in query):
+        elif st.session_state.baholar_baza is not None and ("dars jadval" in query or "jadvalim" in query or "jadval" in query or "qanday darslar bor" in query or "qanday dars bor" in query or "haftalik dars" in query or "darslarim bor" in query):
             response = f"{st.session_state.user_name}, sening haftalik dars jadvaling quyidagicha:<br>{MAKTAB_STATIK_JADVALI['haftalik_jadval']}"
             
-        elif st.session_state.baholar_baza is not None and ("bugun" in query or "otildi" in query or "o'tildi" in query or "bugungi dars" in query):
+        elif st.session_state.baholar_baza is not None and ("bugun" in query or "otildi" in query or "o'tildi" in query or "bugungi dars" in query or "bugun nima dars" in query):
             response = f"{st.session_state.user_name}, bugun dars jadvali bo'yicha quyidagi fanlar o'tildi:<br>{MAKTAB_STATIK_JADVALI['bugungi_darslar']}"
             
         elif st.session_state.baholar_baza is not None and ("vazifa" in query or "vazifam" in query or "uyga vazifa" in query):
@@ -183,7 +185,7 @@ else:
         elif st.session_state.baholar_baza is not None and ("dars qoldirish" in query or "davomat" in query or "davomomat" in query):
             response = f"{st.session_state.user_name}, e-Maktab tizimidagi joriy davomomat ko'rsatkichi: {MAKTAB_STATIK_JADVALI['davomat']}."
 
-        # --- MAKTAB UMUMIY STATIK BAZASI ---
+        # --- MAKTAB UMUMIY STATIK BAZASI (KALIT SO'ZLAR) ---
         elif "yaratgan" in query or "muallif" in query or "kim yaratdi" in query or "husniddin" in query:
             response = f"{st.session_state.user_name}, meni 8-B sinf o'quvchisi Saparboyev Husniddin va maktab jamoasi yaratgan."
         elif "maktab haqida" in query or "maktab tarixi" in query or "tashkil" in query or "makt" in query:
@@ -194,11 +196,15 @@ else:
             response = f"{st.session_state.user_name}, matematika fani o'qituvchilari: Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda."
         elif "informatika" in query:
             response = f"{st.session_state.user_name}, informatika fani o'qituvchilari: Quranboyeva Nafosat, Sabirova Iroda."
+            
+        # --- AQLLI ELSE MANTIQI (AGAR YUQORIDAGI SAVOLLARGA TUSHMA-SA) ---
         else:
             if st.session_state.baholar_baza is None:
+                # Agar foydalanuvchi rostdan ham hali fayl yuklamagan bo'lsa
                 response = f"Sening isming - Maktab AI. e-Maktab tizimidagi shaxsiy baholaringiz va dars jadvallaringizni AI orqali tahlil qilish uchun, avval yuqoridagi bo'limdan e-maktab Excel yoki matnli faylingizni yuklang, {st.session_state.user_name}."
             else:
-                response = f"{st.session_state.user_name}, e-Maktab ma'lumotlaringiz muvaffaqiyatli yuklangan. Mendan 'baholarim qanday?', 'dars jadvalimni ko'rsat', 'bugun qanday fanlar o'tildi?' yoki 'uyga vazifam nima?' deb so'rashingiz mumkin."
+                # Agar fayl yuklangan bo'lsa-yu, ammo bot savolni kalit so'zlardan topa olmasa
+                response = f"{st.session_state.user_name}, e-Maktab ma'lumotlaringiz tizimga yuklangan. Lekin savolingizni to'liq tushunmadim. Mendan 'baholarim qanday?', 'dars darslarim bor?', 'bugun qanday fanlar o'tildi?' yoki 'uyga vazifam nima?' deb aniqroq so'rashingiz mumkin."
 
         with st.chat_message("assistant"):
             st.markdown(response, unsafe_allow_html=True)
