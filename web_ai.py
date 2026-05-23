@@ -11,12 +11,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Neon va Oyna (Blur) effektli CSS dizayni
+# 2. Yangilangan Maktab Kutubxonasi fonli CSS dizayni
 css_style = """
 <style>
     .stApp {
-        background: linear-gradient(rgba(14, 17, 23, 0.7), rgba(14, 17, 23, 0.85)), 
-                    url("https://images.unsplash.com/photo-1624200424564-94bc02bc9242?q=80&w=1920") no-repeat center center fixed;
+        background: linear-gradient(rgba(14, 17, 23, 0.75), rgba(14, 17, 23, 0.85)), 
+                    url("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=1920") no-repeat center center fixed;
         background-size: cover;
     }
     .main-container {
@@ -129,10 +129,7 @@ else:
                         except Exception as e:
                             st.error(f"Xatolik: {e}")
     else:
-        st.sidebar.markdown(f'<div class="emaktab-container"><h4>🟢 Excel yuklangan</h4><p>O\'quvchi: {st.session_state.user_name}</p></div>', unsafe_allow_html=True)
-        if st.sidebar.button("Faylni almashtirish"):
-            st.session_state.excel_rows = None
-            st.rerun()
+        st.sidebar.markdown(f'<div class="emaktab-container"><h4>🟢 Kuzatuv rejimi</h4><p>Foydalanuvchi: {st.session_state.user_name}</p></div>', unsafe_allow_html=True)
 
     # Chat tarixini ko'rsatish
     for message in st.session_state.messages:
@@ -144,7 +141,8 @@ else:
         with st.chat_message("user"): st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        query = prompt.lower().strip()
+        # Kiruvchi so'rovni tozalash va harflarni normallashtirish
+        query = prompt.lower().strip().replace("‘", "'").replace("`", "'").replace("o‘", "o'")
         response = ""
         
         # O'quvchi uchun haftalik kunlarni aniqlash mantiqi
@@ -159,7 +157,7 @@ else:
         if maqsad_kun is None and ("bugun" in query or "darslarim" in query or "darsni" in query):
             maqsad_kun = bugungi_hafta_kuni()
 
-        # --- JAVOB BERISH MANTIQI ---
+        # --- JAVOB BERISH TIPI ---
         
         # 1. O'quvchi roli uchun e-Maktab ma'lumotlari filtrlanishi
         if st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and maqsad_kun is not None:
@@ -178,66 +176,4 @@ else:
                         if k != maqsad_kun.lower() and (f"fan: {k}" in qator.lower() or f"<b>fan:</b> {k}" in qator.lower()):
                             boshqa_kun_bormi = True
                             break
-                    if boshqa_kun_bormi:
-                        break
-                    if qator.strip():
-                        topilgan_darslar.append(qator)
-            
-            if topilgan_darslar:
-                darslar_html = "<br>".join([f"• {d}" for d in topilgan_darslar])
-                response = f"{st.session_state.user_name}, siz so'ragan <b>{maqsad_kun}</b> kunidagi darslar jadvali:<br><br>{darslar_html}"
-            else:
-                response = f"{st.session_state.user_name}, afsuski Excel faylingizdan <b>{maqsad_kun}</b> kuniga doir darslar topilmadi."
-
-        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and ("baho" in query or "baxolar" in query or "hamma" in query or "jadval" in query):
-            hamma_matn = "<br>".join([f"• {d}" for d in st.session_state.excel_rows[:15]])
-            response = f"{st.session_state.user_name}, sizning kundalik ma'lumotlaringiz:<br>{hamma_matn}"
-
-        # 2. Kuzatuvchi shaxsiy darslarni so'raganda taqiq qo'yish
-        elif st.session_state.user_role == "Kuzatuvchi" and ("dars" in query or "baho" in query or "kundalik" in query or "excel" in query):
-            response = f"Uzr, {st.session_state.user_name}. Siz tizimga <b>Kuzatuvchi</b> bo'lib kirgansiz. Shaxsiy e-Maktab dars jadvali va baholarni ko'rish uchun tizimga <b>O'quvchi</b> bo'lib qayta kirishingiz kerak."
-
-        # 3. RASMIY BAZA MA'LUMOTLARI (Yangi yuklangan aniq ma'lumotlar)
-        elif "direktor" in query or "rahbar" in query or "ma'muryat" in query or "o'rinbosar" in query or "administrator" in query:
-            response = (
-                f"{st.session_state.user_name}, 19-sonli maktab ma'muryati tarkibi bilan tanishing:<br><br>"
-                f"• <b>Direktor:</b> Eshmetov Rustambay Ollaberganovich.<br>"
-                f"• <b>Direktor o'rinbosarlari:</b> Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek.<br>"
-                f"• <b>Administrator:</b> Sabirova Iroda Yarash qizi."
-            )
-            
-        elif "yaratgan" in query or "muallif" in query or "husniddin" in query:
-            response = f"Mening ismim — Maktab AI. Men Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisiman. Meni 8-B sinf o'quvchisi <b>Saparboyev Husniddin</b> va maktab jamoasi yaratgan."
-            
-        elif "o'qituvchi" in query or "ustoz" in query or "kim o'tadi" in query or "kafedra" in query or "fanlar" in query:
-            response = (
-                f"{st.session_state.user_name}, maktabimizning aniq fan o'qituvchilari ro'yxati:<br><br>"
-                f"• <b>Matematika:</b> Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda.<br>"
-                f"• <b>Ona tili:</b> Avazova Risolat, Bobojonova Mushtariy, Jumaniyozova Sadoqat, Otajonova Sharofat, Xudoynazarova Nafosat.<br>"
-                f"• <b>Ingliz tili:</b> Eshmurodova Ra'no, Farxodova Muxtaram, Qo'shoqova Gulasal, Rajabova Lobar, Raxmanova So'najon, Sadullayeva Durdona.<br>"
-                f"• <b>Rus tili:</b> Bekmetova Shaxnoza, Bobojonova Komila, Saidova Saragul, Sobirova Nozima, Tillayeva Aziza, Yusupova Sanobar.<br>"
-                f"• <b>Tarix:</b> Allanazarova Zumrad, Matqurbonova Shohina, Matchanova Zebo, Sobirova Gulposhsha.<br>"
-                f"• <b>Fizika/Kimyo:</b> Aminova Mehriniso, Kurbonov Ollashukur, Razzaqova Kumushoy, Meylibayeva Aziza.<br>"
-                f"• <b>Informatika:</b> Quranboyeva Nafosat, Sabirova Iroda.<br>"
-                f"• <b>Boshlang'ich ta'lim:</b> Bobojonova Elmira, Maftuna, Jumanazarova Nargiza, Kenjayeva Iroda, Normatova Iqbol, Nurmetova Marhabo, Otajonova Sarvinoz, Quryozova Sanobar, Ro'ziboyeva Sarvinoz, Sadiqova Farida, Saidmatova Muattar, Saparmatova Sadoqat, Xo'jayeva Shahnoza.<br>"
-                f"• <b>Sport:</b> Pirnnazarov Nurali, Ro'zmetova Muhtarama, Xudaynazarov Davronbek, Yusupova Zuhraxon.<br>"
-                f"• <b>Musiqa/San'at:</b> O'razmetov O'tkir, Xusainov Sodiqjon, Otamuratov Rustam, Sobirova Maloxat.<br>"
-                f"• <b>Texnologiya:</b> Boltayeva Zebo, Eshchanova Nodira, Matkarimova Intizor, Matyoqubova Xusniobod, Sobirov Ollayor."
-            )
-            
-        elif "maktab" in query or "tarix" in query or "tashkil" in query or "manzil" in query or "qayerda" in query:
-            response = (
-                f"<b>19-sonli maktab haqida ma'lumot:</b><br><br>"
-                f"• <b>Tashkil etilgan vaqti:</b> Maktab 1982-yil 2-sentabrda tashkil etilgan.<br>"
-                f"• <b>Manzil:</b> Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
-            )
-            
-        else:
-            if st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is None:
-                response = f"{st.session_state.user_name}, shaxsiy e-Maktab ko'rsatkichlaringizni tahlil qilish uchun avval yuqoridan Excel faylingizni yuklang."
-            else:
-                response = f"{st.session_state.user_name}, so'rovingiz qabul qilindi. Maktab ma'muryati, o'qituvchilari yoki maktab tarixi bo'yicha aniq savol bersangiz, to'liq javob berishga tayyorman."
-
-        with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.rerun()
+                    if boshqa_kun_b
