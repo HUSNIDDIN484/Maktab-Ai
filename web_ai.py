@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Yangilangan Maktab Kutubxonasi fonli CSS dizayni
+# 2. Maktab Kutubxonasi va Sinf xonasi fonli CSS dizayni
 css_style = """
 <style>
     .stApp {
@@ -145,10 +145,11 @@ else:
         query = prompt.lower().strip().replace("‘", "'").replace("`", "'").replace("o‘", "o'")
         response = ""
         
-        # O'quvchi uchun haftalik kunlarni aniqlash mantiqi
-        maqsad_kun = None
+        # To'g'ri yozilgan hafta kunlari ro'yxati
         hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
         
+        # O'quvchi uchun haftalik kunlarni aniqlash mantiqi
+        maqsad_kun = None
         for kun in hafta_kunlari:
             if kun in query:
                 maqsad_kun = kun.capitalize()
@@ -157,7 +158,7 @@ else:
         if maqsad_kun is None and ("bugun" in query or "darslarim" in query or "darsni" in query):
             maqsad_kun = bugungi_hafta_kuni()
 
-        # --- JAVOB BERISH TIPI ---
+        # --- JAVOB BERISH MANTIQI ---
         
         # 1. O'quvchi roli uchun e-Maktab ma'lumotlari filtrlanishi
         if st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and maqsad_kun is not None:
@@ -176,4 +177,68 @@ else:
                         if k != maqsad_kun.lower() and (f"fan: {k}" in qator.lower() or f"<b>fan:</b> {k}" in qator.lower()):
                             boshqa_kun_bormi = True
                             break
-                    if boshqa_kun_b
+                    if boshqa_kun_bormi:
+                        break
+                    if qator.strip():
+                        topilgan_darslar.append(qator)
+            
+            if topilgan_darslar:
+                darslar_html = "<br>".join([f"• {d}" for d in topilgan_darslar])
+                response = f"{st.session_state.user_name}, siz so'ragan <b>{maqsad_kun}</b> kunidagi darslar jadvali:<br><br>{darslar_html}"
+            else:
+                response = f"{st.session_state.user_name}, afsuski Excel faylingizdan <b>{maqsad_kun}</b> kuniga doir darslar topilmadi."
+
+        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and ("baho" in query or "baxolar" in query or "hamma" in query or "jadval" in query):
+            hamma_matn = "<br>".join([f"• {d}" for d in st.session_state.excel_rows[:15]])
+            response = f"{st.session_state.user_name}, sizning kundalik ma'lumotlaringiz:<br>{hamma_matn}"
+
+        # 2. Kuzatuvchi shaxsiy darslarni so'raganda taqiq qo'yish
+        elif st.session_state.user_role == "Kuzatuvchi" and ("dars" in query or "baho" in query or "kundalik" in query or "excel" in query):
+            response = f"Uzr, {st.session_state.user_name}. Siz tizimga <b>Kuzatuvchi</b> bo'lib kirgansiz. Shaxsiy e-Maktab dars jadvali va baholarni ko'rish uchun tizimga <b>O'quvchi</b> bo'lib qayta kirishingiz kerak."
+
+        # 3. RASMIY INTEGRATSIYA QILINGAN BAZA
+        elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
+            response = (
+                f"{st.session_state.user_name}, 19-sonli maktab ma'muryati tarkibi:<br><br>"
+                f"• <b>Direktor:</b> Eshmetov Rustambay Ollaberganovich.<br>"
+                f"• <b>Direktor o'rinbosarlari:</b> Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek.<br>"
+                f"• <b>Administrator:</b> Sabirova Iroda Yarash qizi."
+            )
+            
+        elif any(k in query for k in ["yaratgan", "muallif", "husniddin", "saparboyev"]):
+            response = (
+                f"Sening isming - Maktab AI. Men Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisiman. "
+                f"Meni 8-B sinf o'quvchisi <b>Saparboyev Husniddin</b> va maktab jamoasi yaratgan, {st.session_state.user_name}."
+            )
+            
+        elif any(k in query for k in ["o'qituvchi", "oqituvchi", "ustoz", "kim o'tadi", "fanlar", "ro'yxat", "royxat", "malumotlari"]):
+            response = (
+                f"{st.session_state.user_name}, Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab o'qituvchilarining to'liq ro'yxati:<br><br>"
+                f"• <b>Matematika:</b> Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda.<br>"
+                f"• <b>Ona tili:</b> Avazova Risolat, Bobojonova Mushtariy, Jumaniyozova Sadoqat, Otajonova Sharofat, Xudoynazarova Nafosat.<br>"
+                f"• <b>Ingliz tili:</b> Eshmurodova Ra'no, Farxodova Muxtaram, Qo'shoqova Gulasal, Rajabova Lobar, Raxmanova So'najon, Sadullayeva Durdona.<br>"
+                f"• <b>Rus tili:</b> Bekmetova Shaxnoza, Bobojonova Komila, Saidova Saragul, Sobirova Nozima, Tillayeva Aziza, Yusupova Sanobar.<br>"
+                f"• <b>Tarix:</b> Allanazarova Zumrad, Matqurbonova Shohina, Matchanova Zebo, Sobirova Gulposhsha.<br>"
+                f"• <b>Fizika/Kimyo:</b> Aminova Mehriniso, Kurbonov Ollashukur, Razzaqova Kumushoy, Meylibayeva Aziza.<br>"
+                f"• <b>Informatika:</b> Quranboyeva Nafosat, Sabirova Iroda.<br>"
+                f"• <b>Boshlang'ich ta'lim:</b> Bobojonova Elmira, Maftuna, Jumanazarova Nargiza, Kenjayeva Iroda, Normatova Iqbol, Nurmetova Marhabo, Otajonova Sarvinoz, Quryozova Sanobar, Ro'ziboyeva Sarvinoz, Sadiqova Farida, Saidmatova Muattar, Saparmatova Sadoqat, Xo'jayeva Shahnoza.<br>"
+                f"• <b>Sport:</b> Pirnnazarov Nurali, Ro'zmetova Muhtarama, Xudaynazarov Davronbek, Yusupova Zuhraxon.<br>"
+                f"• <b>Musiqa/San'at:</b> O'razmetov O'tkir, Xusainov Sodiqjon, Otamuratov Rustam, Sobirova Maloxat.<br>"
+                f"• <b>Texnologiya:</b> Boltayeva Zebo, Eshchanova Nodira, Matkarimova Intizor, Matyoqubova Xusniobod, Sobirov Ollayor."
+            )
+            
+        elif any(k in query for k in ["maktab", "tarix", "tashkil", "manzil", "qayerda", "qishloq", "mahalla"]):
+            response = (
+                f"{st.session_state.user_name}, 19-sonli maktabimiz 1982-yil 2-sentabrda tashkil etilgan. "
+                f"Manzilimiz: Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
+            )
+            
+        else:
+            if st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is None:
+                response = f"{st.session_state.user_name}, shaxsiy e-Maktab ko'rsatkichlaringizni tahlil qilish uchun avval yuqoridan Excel faylingizni yuklang."
+            else:
+                response = f"{st.session_state.user_name}, men bilan maktab rahbariyati, o'qituvchilar va maktab tarixi haqida batafsil suhbatlashishingiz mumkin. Savolingizni beravering!"
+
+        with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.rerun()
