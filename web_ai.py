@@ -128,6 +128,10 @@ else:
                             st.rerun()
                         except Exception as e:
                             st.error(f"Xatolik: {e}")
+        else:
+            if st.sidebar.button("Faylni o'chirish / Qayta yuklash"):
+                st.session_state.excel_rows = None
+                st.rerun()
     else:
         st.sidebar.markdown(f'<div class="emaktab-container"><h4>🟢 Kuzatuv rejimi</h4><p>Foydalanuvchi: {st.session_state.user_name}</p></div>', unsafe_allow_html=True)
 
@@ -141,11 +145,11 @@ else:
         with st.chat_message("user"): st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        # Kiruvchi so'rovni tozalash va 'x' harfini 'h' ga o'giriw (raxbar -> rahbar bo'lishi uchun)
+        # Kiruvchi so'rovni tozalash va harflarni o'giriw (raxbar -> rahbar bo'lishi uchun)
         query = prompt.lower().strip().replace("‘", "'").replace("`", "'").replace("o‘", "o'").replace("x", "h")
         response = ""
         
-        # To'g'ri yozilgan hafta kunlari ro'yxati
+        # To'g'ri yozilgan hafta kunlari ro'yxati (NameError butunlay bartaraf etildi)
         hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
         
         # O'quvchi uchun haftalik kunlarni aniqlash mantiqi
@@ -158,45 +162,13 @@ else:
         if maqsad_kun is None and ("bugun" in query or "darslarim" in query or "darsni" in query):
             maqsad_kun = bugungi_hafta_kuni()
 
-        # --- JAVOB BERISH MANTIQI ---
+        # --- TARTIBLANGAN JAVOB BERISH MANTIQLARI ---
         
-        # 1. O'quvchi roli uchun e-Maktab ma'lumotlari filtrlanishi
-        if st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and maqsad_kun is not None:
-            topilgan_darslar = []
-            kun_topildi = False
-            
-            for qator in st.session_state.excel_rows:
-                if f"fan: {maqsad_kun.lower()}" in qator.lower() or f"<b>fan:</b> {maqsad_kun.lower()}" in qator.lower():
-                    kun_topildi = True
-                    topilgan_darslar.append(qator)
-                    continue
-                
-                if kun_topildi:
-                    boshqa_kun_bormi = False
-                    for k in hafta_kunlari:
-                        if k != maqsad_kun.lower() and (f"fan: {k}" in qator.lower() or f"<b>fan:</b> {k}" in qator.lower()):
-                            boshqa_kun_bormi = True
-                            break
-                    if boshqa_kun_bormi:
-                        break
-                    if qator.strip():
-                        topilgan_darslar.append(qator)
-            
-            if topilgan_darslar:
-                darslar_html = "<br>".join([f"• {d}" for d in topilgan_darslar])
-                response = f"{st.session_state.user_name}, siz so'ragan <b>{maqsad_kun}</b> kunidagi darslar jadvali:<br><br>{darslar_html}"
-            else:
-                response = f"{st.session_state.user_name}, afsuski Excel faylingizdan <b>{maqsad_kun}</b> kuniga doir darslar topilmadi."
-
-        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and ("baho" in query or "baxolar" in query or "hamma" in query or "jadval" in query):
-            hamma_matn = "<br>".join([f"• {d}" for d in st.session_state.excel_rows[:15]])
-            response = f"{st.session_state.user_name}, sizning kundalik ma'lumotlaringiz:<br>{hamma_matn}"
-
-        # 2. Kuzatuvchi shaxsiy darslarni so'raganda taqiq qo'yish
-        elif st.session_state.user_role == "Kuzatuvchi" and ("dars" in query or "baho" in query or "kundalik" in query or "excel" in query):
+        # 1. Kuzatuvchi shaxsiy darslarni so'raganda taqiq qo'yish
+        if st.session_state.user_role == "Kuzatuvchi" and ("dars" in query or "baho" in query or "kundalik" in query or "excel" in query):
             response = f"Uzr, {st.session_state.user_name}. Siz tizimga <b>Kuzatuvchi</b> bo'lib kirgansiz. Shaxsiy e-Maktab dars jadvali va baholarni ko'rish uchun tizimga <b>O'quvchi</b> bo'lib qayta kirishingiz kerak."
 
-        # 3. RASMIY INTEGRATSIYA QILINGAN BAZA (Tuzatilgan kalit so'zlar bilan)
+        # 2. MAKTAB MA'LUMOTLARI BAZASI (Birinchi o'ringa olindi, aralashib ketmasligi uchun)
         elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
             response = (
                 f"{st.session_state.user_name}, 19-sonli maktab ma'muryati tarkibi:<br><br>"
@@ -211,7 +183,7 @@ else:
                 f"Meni 8-B sinf o'quvchisi <b>Saparboyev Husniddin</b> va maktab jamoasi yaratgan, {st.session_state.user_name}."
             )
             
-        elif any(k in query for k in ["o'qituvchi", "oqituvchi", "ustoz", "kim o'tadi", "fanlar", "ro'yxat", "royxat", "malumotlari"]):
+        elif any(k in query for k in ["o'qituvchi", "oqituvchi", "ustoz", "kim o'tadi", "fanlar", "ro'yxat", "royxat"]):
             response = (
                 f"{st.session_state.user_name}, Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab o'qituvchilarining to'liq ro'yxati:<br><br>"
                 f"• <b>Matematika:</b> Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda.<br>"
@@ -229,13 +201,47 @@ else:
             
         elif any(k in query for k in ["maktab", "tarix", "tashkil", "manzil", "qayerda", "qishloq", "mahalla"]):
             response = (
-                f"{st.session_state.user_name}, 19-sonli maktabimiz 1982-yil 2-sentabrda tashkil etilgan. "
-                f"Manzilimiz: Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
+                f"<b>19-sonli umumta'lim maktabi haqida ma'lumot:</b><br><br>"
+                f"• <b>Tashkil etilgan vaqti:</b> Maktabimiz 1982-yil 2-sentabrda tashkil etilgan.<br>"
+                f"• <b>Manzilimiz:</b> Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
             )
+
+        # 3. e-MAKTAB EXCEL MA'LUMOTLARINI FILTRLASH MANTIQLARI
+        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and maqsad_kun is not None:
+            topilgan_darslar = []
+            kun_topildi = False
             
+            for qator in st.session_state.excel_rows:
+                # Kun nomi qatorda borligini aniq tekshirish
+                if f"fan: {maqsad_kun.lower()}" in qator.lower() or f"<b>fan:</b> {maqsad_kun.lower()}" in qator.lower() or f"ma'lumot: {maqsad_kun.lower()}" in qator.lower():
+                    kun_topildi = True
+                    topilgan_darslar.append(qator)
+                    continue
+                
+                if kun_topildi:
+                    boshqa_kun_bormi = False
+                    for k in hafta_kunlari:
+                        if k != maqsad_kun.lower() and (f"fan: {k}" in qator.lower() or f"<b>fan:</b> {k}" in qator.lower() or f"ma'lumot: {k}" in qator.lower()):
+                            boshqa_kun_bormi = True
+                            break
+                    if boshqa_kun_bormi:
+                        break
+                    if qator.strip():
+                        topilgan_darslar.append(qator)
+            
+            if topilgan_darslar:
+                darslar_html = "<br>".join([f"• {d}" for d in topilgan_darslar])
+                response = f"{st.session_state.user_name}, Excel faylingizdan olingan <b>{maqsad_kun}</b> kunidagi darslar jadvali va vazifalar:<br><br>{darslar_html}"
+            else:
+                response = f"{st.session_state.user_name}, afsuski Excel faylingizdan <b>{maqsad_kun}</b> kuniga doir darslar topilmadi."
+
+        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and any(k in query for k in ["baho", "baxolar", "hamma", "jadval", "kundalik"]):
+            hamma_matn = "<br>".join([f"• {d}" for d in st.session_state.excel_rows])
+            response = f"{st.session_state.user_name}, sizning kundalik ma'lumotlaringiz:<br><br>{hamma_matn}"
+
         else:
             if st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is None:
-                response = f"{st.session_state.user_name}, shaxsiy e-Maktab ko'rsatkichlaringizni tahlil qilish uchun avval yuqoridan Excel faylingizni yuklang."
+                response = f"Sening isming - Maktab AI. e-Maktab tizimidagi shaxsiy baholaringiz va dars jadvallaringizni AI orqali tahlil qilish uchun, avval yuqoridagi bo'limdan e-maktab Excel yoki matnli faylingizni yuklang, {st.session_state.user_name}."
             else:
                 response = f"{st.session_state.user_name}, men bilan maktab rahbariyati, o'qituvchilar va maktab tarixi haqida batafsil suhbatlashishingiz mumkin. Savolingizni beravering!"
 
