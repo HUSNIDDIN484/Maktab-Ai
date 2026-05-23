@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Maktab Kutubxonasi va Sinf xonasi fonli CSS dizayni
+# 2. Maktab Kutubxonasi fonli CSS dizayni
 css_style = """
 <style>
     .stApp {
@@ -141,8 +141,8 @@ else:
         with st.chat_message("user"): st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        # Kiruvchi so'rovni tozalash va harflarni normallashtirish
-        query = prompt.lower().strip().replace("‘", "'").replace("`", "'").replace("o‘", "o'")
+        # Kiruvchi so'rovni tozalash va 'x' harfini 'h' ga o'giriw (raxbar -> rahbar bo'lishi uchun)
+        query = prompt.lower().strip().replace("‘", "'").replace("`", "'").replace("o‘", "o'").replace("x", "h")
         response = ""
         
         # To'g'ri yozilgan hafta kunlari ro'yxati
@@ -196,7 +196,7 @@ else:
         elif st.session_state.user_role == "Kuzatuvchi" and ("dars" in query or "baho" in query or "kundalik" in query or "excel" in query):
             response = f"Uzr, {st.session_state.user_name}. Siz tizimga <b>Kuzatuvchi</b> bo'lib kirgansiz. Shaxsiy e-Maktab dars jadvali va baholarni ko'rish uchun tizimga <b>O'quvchi</b> bo'lib qayta kirishingiz kerak."
 
-        # 3. RASMIY INTEGRATSIYA QILINGAN BAZA
+        # 3. RASMIY INTEGRATSIYA QILINGAN BAZA (Tuzatilgan kalit so'zlar bilan)
         elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
             response = (
                 f"{st.session_state.user_name}, 19-sonli maktab ma'muryati tarkibi:<br><br>"
