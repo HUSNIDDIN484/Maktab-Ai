@@ -140,7 +140,7 @@ else:
         query = prompt.lower().strip().replace("o‘", "o'").replace("x", "h")
         response = ""
         
-        # Hafta kunlarini anixlash
+        # Hafta kunlarini aniqlash
         hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
         maqsad_kun = next((kun.capitalize() for kun in hafta_kunlari if kun in query), None)
         if maqsad_kun is None and ("bugun" in query or "darslar" in query): maqsad_kun = bugungi_hafta_kuni()
@@ -149,7 +149,7 @@ else:
         if st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
             response = f"Uzr, {st.session_state.user_name}. Shaxsiy e-Maktab ma'lumotlarini ko'rish uchun tizimga <b>O'quvchi</b> bo'lib kirishingiz kerak."
         elif st.session_state.user_role == "O'qituvchi" and any(k in query for k in ["mening vazifam", "e'lon", "elon"]):
-            response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadirgiz."
+            response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadingiz."
         
         # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI
         elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
@@ -196,23 +196,28 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. 🔴 AGAR YUQORIDAGI MAVZULARGA TUSHMASA -> CHEKSIZ GEMINI AI ISHGA TUSHADI!
+        # 4. 🔴 YANCHILGAN INTEGRASIYA - HAR QANDAY VERSODA MODEL XATOLIKLARINI CHEKLOVCHI BLOK
         else:
             try:
-                # 'gemini-pro' o'rniga eng yangi 'gemini-1.5-flash' qo'yildi
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                # Agar Google kutubxonasi eski api uslubini so'rasa, xatolik bermaslik uchun modelni xavfsiz shakllantiramiz
+                try:
+                    model = genai.GenerativeModel(model_name='gemini-1.5-flash')
+                except TypeError:
+                    model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 tizim_shaxsiyati = (
                     f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
                     f"Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Hozir senga foydalanuvchi {st.session_state.user_name} "
                     f"savol bermoqda. Unga do'stona, aniq va o'zbek tilida javob ber. Savol quyidagicha: "
                 )
+                
                 ai_response = model.generate_content(tizim_shaxsiyati + prompt)
                 response = ai_response.text
             except Exception as e:
-                response = f"Uzr, Gemini AI tizimiga ulanishda xatolik yuz berdi. API kalitini secrets panelida tekshiring. Xatolik: {e}"
+                response = f"Uzr, Gemini AI tizimiga ulanishda xatolik yuz berdi. Xatolik: {e}"
 
         # Javobni ekranga chiqarish
         with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.rerun()
+  
