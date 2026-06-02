@@ -196,14 +196,10 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. 🔴 YANCHILGAN INTEGRASIYA - HAR QANDAY VERSODA MODEL XATOLIKLARINI CHEKLOVCHI BLOK
+        # 4. 🔴 ENG YANGI GEMINI MODEL INTEGRATSIYASI
         else:
             try:
-                # Agar Google kutubxonasi eski api uslubini so'rasa, xatolik bermaslik uchun modelni xavfsiz shakllantiramiz
-                try:
-                    model = genai.GenerativeModel(model_name='gemini-1.5-flash')
-                except TypeError:
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 tizim_shaxsiyati = (
                     f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
@@ -220,4 +216,3 @@ else:
         with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.rerun()
-  
