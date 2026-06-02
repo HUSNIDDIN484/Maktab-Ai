@@ -1,9 +1,16 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import io
+import google.generativeai as genai
 
-# 1. Sahifa sozlamalari
+# API Kalitini xavfsiz usulda st.secrets orqali o'qiymiz
+try:
+    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=GEMINI_API_KEY)
+except Exception:
+    st.error("Xatolik: GEMINI_API_KEY sirlar omboridan (secrets) topilmadi!")
+
+# Sahifa sozlamalari
 st.set_page_config(
     page_title="19-son Maktab AI",
     page_icon="🏫",
@@ -11,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Maktab Kutubxonasi fonli CSS dizayni
+# Fonli dizayn uchun CSS
 css_style = """
 <style>
     .stApp {
@@ -41,13 +48,6 @@ css_style = """
         display: inline-block;
         margin-top: 5px;
     }
-    .emaktab-container {
-        background: rgba(0, 229, 255, 0.05);
-        border: 1px solid rgba(0, 229, 255, 0.2);
-        border-radius: 15px;
-        padding: 20px;
-        margin-top: 15px;
-    }
     .stChatInputContainer {
         background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -57,118 +57,101 @@ css_style = """
 """
 st.markdown(css_style, unsafe_allow_html=True)
 
-# Hafta kunlarini o'zbekchaga o'girish funksiyasi
 def bugungi_hafta_kuni():
-    kunlar = {
-        0: "Dushanba", 1: "Seshanba", 2: "Chorshanba", 
-        3: "Payshanba", 4: "Juma", 5: "Shanba", 6: "Yakshanba"
-    }
+    kunlar = {0: "Dushanba", 1: "Seshanba", 2: "Chorshanba", 3: "Payshanba", 4: "Juma", 5: "Shanba", 6: "Yakshanba"}
     return kunlar[datetime.now().weekday()]
 
-# 3. Session State (Tizim xotirasi)
+# Tizim xotirasi (Session State)
 if "user_name" not in st.session_state: st.session_state.user_name = None
 if "user_role" not in st.session_state: st.session_state.user_role = None
+if "teacher_subject" not in st.session_state: st.session_state.teacher_subject = None
 if "excel_rows" not in st.session_state: st.session_state.excel_rows = None
+if "teacher_announcement" not in st.session_state: st.session_state.teacher_announcement = None
 if "messages" not in st.session_state: st.session_state.messages = []
 
-# 4. Kirish oynasi
+# Kirish oynasi
 if st.session_state.user_name is None:
     st.markdown('<div class="main-container"><div class="main-title">🏫 19-SON MAKTAB AI</div></div>', unsafe_allow_html=True)
+    ism = st.text_input("Iltimos, ismingizni kiriting:", placeholder="Ismingiz va familiyangiz...")
+    rol = st.radio("Tizimga kirish turi:", ["O'quvchi", "O'qituvchi", "Kuzatuvchi"], index=0)
     
-    ism = st.text_input("Iltimos, ismingizni kiriting:", key="name_input", placeholder="Ismingiz...")
-    rol = st.radio("Tizimga kirish turi:", ["O'quvchi", "Kuzatuvchi"], index=0)
-    
+    fan = ""
+    if rol == "O'qituvchi":
+        fan = st.text_input("Dars beradigan fandingizni kiriting:", placeholder="Masalan: Matematika...")
+        
     if st.button("Kirish"):
         if ism.strip():
-            st.session_state.user_name = ism.strip()
-            st.session_state.user_role = rol
-            st.rerun()
-        else:
-            st.error("Ism bo'sh bo'lishi mumkin emas!")
+            if rol == "O'qituvchi" and not fan.strip():
+                st.error("O'qituvchi fandi majburiy!")
+            else:
+                st.session_state.user_name = ism.strip()
+                st.session_state.user_role = rol
+                if rol == "O'qituvchi": st.session_state.teacher_subject = fan.strip()
+                st.rerun()
 else:
-    # Asosiy oyna sarlavhasi
-    st.markdown(
-        f'<div class="main-container">'
-        f'<div class="main-title">🏫 19-SON MAKTAB AI</div>'
-        f'<div class="welcome-text">Salom, {st.session_state.user_name}! 👋</div>'
-        f'<div class="role-badge">Tizimda: {st.session_state.user_role}</div>'
-        f'</div>', 
-        unsafe_allow_html=True
-    )
+    role_display = f"{st.session_state.user_role} ({st.session_state.teacher_subject})" if st.session_state.user_role == "O'qituvchi" else st.session_state.user_role
+    st.markdown(f'<div class="main-container"><div class="main-title">🏫 19-SON MAKTAB AI</div><div class="welcome-text">Salom, {st.session_state.user_name}! 👋</div><div class="role-badge">Tizimda: {role_display}</div></div>', unsafe_allow_html=True)
 
-    # 5. O'quvchi roli uchun Excel yuklash bo'limi
+    if st.sidebar.button("Tizimdan chiqish"):
+        st.session_state.user_name = None; st.session_state.user_role = None; st.session_state.teacher_subject = None
+        st.session_state.excel_rows = None; st.session_state.teacher_announcement = None; st.session_state.messages = []
+        st.rerun()
+
+    # O'quvchi uchun Excel yuklash paneli
     if st.session_state.user_role == "O'quvchi":
         if st.session_state.excel_rows is None:
             with st.expander("📊 REAL e-Maktab Excel faylini yuklash", expanded=True):
                 uploaded_file = st.file_uploader("Excel faylni tanlang (.xlsx)", type=["xlsx"])
-                
                 if uploaded_file is not None:
-                    with st.spinner("Excel tahlil qilinmoqda..."):
-                        try:
-                            df = pd.read_excel(uploaded_file)
-                            saqlangan_qatorlar = []
-                            
-                            for index, row in df.iterrows():
-                                elementlar = []
-                                for k, v in row.items():
-                                    if pd.notna(v):
-                                        v_str = str(v).strip()
-                                        if "Unnamed: 1" in str(k): k_name = "Fan"
-                                        elif "Unnamed: 2" in str(k): k_name = "Baho"
-                                        elif "Unnamed: 3" in str(k): k_name = "Vazifa"
-                                        else: k_name = str(k).replace("Дневник", "Ma'lumot")
-                                        
-                                        elementlar.append(f"<b>{k_name}:</b> {v_str}")
-                                        
-                                qator_matni = " | ".join(elementlar)
-                                saqlangan_qatorlar.append(qator_matni)
-                            
-                            st.session_state.excel_rows = saqlangan_qatorlar
-                            st.success("Excel muvaffaqiyatli o'qildi!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Xatolik: {e}")
-        else:
-            if st.sidebar.button("Faylni o'chirish / Qayta yuklash"):
-                st.session_state.excel_rows = None
-                st.rerun()
-    else:
-        st.sidebar.markdown(f'<div class="emaktab-container"><h4>🟢 Kuzatuv rejimi</h4><p>Foydalanuvchi: {st.session_state.user_name}</p></div>', unsafe_allow_html=True)
+                    df = pd.read_excel(uploaded_file)
+                    saqlangan_qatorlar = []
+                    for index, row in df.iterrows():
+                        elementlar = []
+                        for k, v in row.items():
+                            if pd.notna(v):
+                                v_str = str(v).strip()
+                                if "Unnamed: 1" in str(k): k_name = "Fan"
+                                elif "Unnamed: 2" in str(k): k_name = "Baho"
+                                elif "Unnamed: 3" in str(k): k_name = "Vazifa"
+                                else: k_name = str(k).replace("Дневник", "Ma'lumot")
+                                elementlar.append(f"<b>{k_name}:</b> {v_str}")
+                        saqlangan_qatorlar.append(" | ".join(elementlar))
+                    st.session_state.excel_rows = saqlangan_qatorlar
+                    st.success("Excel o'qildi!")
+                    st.rerun()
+    
+    # O'qituvchi paneli
+    elif st.session_state.user_role == "O'qituvchi":
+        with st.expander("📝 O'qituvchining tezkor boshqaruv paneli", expanded=True):
+            elon_matni = st.text_area("Bugungi dars yuzasidan e'lon yoki vazifa:", value=st.session_state.teacher_announcement if st.session_state.teacher_announcement else "")
+            if st.button("E'lonni saqlash"):
+                st.session_state.teacher_announcement = elon_matni.strip()
+                st.success("E'lon saqlandi!")
 
-    # Chat tarixini ko'rsatish
+    # Chat tarixini chiqarish
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"], unsafe_allow_html=True)
+        with st.chat_message(message["role"]): st.markdown(message["content"], unsafe_allow_html=True)
 
-    # Savol-javob paneli
+    # Savol yuborilganda
     if prompt := st.chat_input("Savolingizni yozing..."):
         with st.chat_message("user"): st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        # Kiruvchi so'rovni tozalash va harflarni o'giriw (raxbar -> rahbar bo'lishi uchun)
-        query = prompt.lower().strip().replace("‘", "'").replace("`", "'").replace("o‘", "o'").replace("x", "h")
+        query = prompt.lower().strip().replace("o‘", "o'").replace("x", "h")
         response = ""
         
-        # To'g'ri yozilgan hafta kunlari ro'yxati (NameError butunlay bartaraf etildi)
+        # Hafta kunlarini aniqlash
         hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
-        
-        # O'quvchi uchun haftalik kunlarni aniqlash mantiqi
-        maqsad_kun = None
-        for kun in hafta_kunlari:
-            if kun in query:
-                maqsad_kun = kun.capitalize()
-                break
-        
-        if maqsad_kun is None and ("bugun" in query or "darslarim" in query or "darsni" in query):
-            maqsad_kun = bugungi_hafta_kuni()
+        maqsad_kun = next((kun.capitalize() for kun in hafta_kunlari if kun in query), None)
+        if maqsad_kun is None and ("bugun" in query or "darslar" in query): maqsad_kun = bugungi_hafta_kuni()
 
-        # --- TARTIBLANGAN JAVOB BERISH MANTIQLARI ---
+        # 1. TAQIQLAR VA FILTRLAR
+        if st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
+            response = f"Uzr, {st.session_state.user_name}. Shaxsiy e-Maktab ma'lumotlarini ko'rish uchun tizimga <b>O'quvchi</b> bo'lib kirishingiz kerak."
+        elif st.session_state.user_role == "O'qituvchi" and any(k in query for k in ["mening vazifam", "e'lon", "elon"]):
+            response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadingiz."
         
-        # 1. Kuzatuvchi shaxsiy darslarni so'raganda taqiq qo'yish
-        if st.session_state.user_role == "Kuzatuvchi" and ("dars" in query or "baho" in query or "kundalik" in query or "excel" in query):
-            response = f"Uzr, {st.session_state.user_name}. Siz tizimga <b>Kuzatuvchi</b> bo'lib kirgansiz. Shaxsiy e-Maktab dars jadvali va baholarni ko'rish uchun tizimga <b>O'quvchi</b> bo'lib qayta kirishingiz kerak."
-
-        # 2. MAKTAB MA'LUMOTLARI BAZASI (Birinchi o'ringa olindi, aralashib ketmasligi uchun)
+        # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI (TO'LIQ RO'YXAT)
         elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
             response = (
                 f"{st.session_state.user_name}, 19-sonli maktab ma'muryati tarkibi:<br><br>"
@@ -176,16 +159,11 @@ else:
                 f"• <b>Direktor o'rinbosarlari:</b> Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek.<br>"
                 f"• <b>Administrator:</b> Sabirova Iroda Yarash qizi."
             )
-            
         elif any(k in query for k in ["yaratgan", "muallif", "husniddin", "saparboyev"]):
+            response = f"Meni Xorazm viloyati, Yangiariq tumani, 19-sonli maktabning 8-B sinf o'quvchisi <b>Saparboyev Husniddin</b> yaratgan!"
+        elif any(k in query for k in ["o'qituvchi", "ustoz", "fanlar", "ro'yxat", "oqituvchi"]):
             response = (
-                f"Sening isming - Maktab AI. Men Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab yordamchisiman. "
-                f"Meni 8-B sinf o'quvchisi <b>Saparboyev Husniddin</b> va maktab jamoasi yaratgan, {st.session_state.user_name}."
-            )
-            
-        elif any(k in query for k in ["o'qituvchi", "oqituvchi", "ustoz", "kim o'tadi", "fanlar", "ro'yxat", "royxat"]):
-            response = (
-                f"{st.session_state.user_name}, Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'idagi 19-sonli maktab o'qituvchilarining to'liq ro'yxati:<br><br>"
+                f"{st.session_state.user_name}, 19-sonli maktab o'qituvchilarining to'liq ro'yxati:<br><br>"
                 f"• <b>Matematika:</b> Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda.<br>"
                 f"• <b>Ona tili:</b> Avazova Risolat, Bobojonova Mushtariy, Jumaniyozova Sadoqat, Otajonova Sharofat, Xudoynazarova Nafosat.<br>"
                 f"• <b>Ingliz tili:</b> Eshmurodova Ra'no, Farxodova Muxtaram, Qo'shoqova Gulasal, Rajabova Lobar, Raxmanova So'najon, Sadullayeva Durdona.<br>"
@@ -198,53 +176,41 @@ else:
                 f"• <b>Musiqa/San'at:</b> O'razmetov O'tkir, Xusainov Sodiqjon, Otamuratov Rustam, Sobirova Maloxat.<br>"
                 f"• <b>Texnologiya:</b> Boltayeva Zebo, Eshchanova Nodira, Matkarimova Intizor, Matyoqubova Xusniobod, Sobirov Ollayor."
             )
-            
         elif any(k in query for k in ["maktab", "tarix", "tashkil", "manzil", "qayerda", "qishloq", "mahalla"]):
             response = (
                 f"<b>19-sonli umumta'lim maktabi haqida ma'lumot:</b><br><br>"
                 f"• <b>Tashkil etilgan vaqti:</b> Maktabimiz 1982-yil 2-sentabrda tashkil etilgan.<br>"
                 f"• <b>Manzilimiz:</b> Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
             )
-
-        # 3. e-MAKTAB EXCEL MA'LUMOTLARINI FILTRLASH MANTIQLARI
+        
+        # 3. EXCEL MA'LUMOTLARINI QIDIRISH
         elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and maqsad_kun is not None:
-            topilgan_darslar = []
-            kun_topildi = False
-            
+            topilgan = []
+            flag = False
             for qator in st.session_state.excel_rows:
-                # Kun nomi qatorda borligini aniq tekshirish
-                if f"fan: {maqsad_kun.lower()}" in qator.lower() or f"<b>fan:</b> {maqsad_kun.lower()}" in qator.lower() or f"ma'lumot: {maqsad_kun.lower()}" in qator.lower():
-                    kun_topildi = True
-                    topilgan_darslar.append(qator)
+                if f"ma'lumot: {maqsad_kun.lower()}" in qator.lower() or f"fan: {maqsad_kun.lower()}" in qator.lower():
+                    flag = True
+                    topilgan.append(qator)
                     continue
-                
-                if kun_topildi:
-                    boshqa_kun_bormi = False
-                    for k in hafta_kunlari:
-                        if k != maqsad_kun.lower() and (f"fan: {k}" in qator.lower() or f"<b>fan:</b> {k}" in qator.lower() or f"ma'lumot: {k}" in qator.lower()):
-                            boshqa_kun_bormi = True
-                            break
-                    if boshqa_kun_bormi:
-                        break
-                    if qator.strip():
-                        topilgan_darslar.append(qator)
-            
-            if topilgan_darslar:
-                darslar_html = "<br>".join([f"• {d}" for d in topilgan_darslar])
-                response = f"{st.session_state.user_name}, Excel faylingizdan olingan <b>{maqsad_kun}</b> kunidagi darslar jadvali va vazifalar:<br><br>{darslar_html}"
-            else:
-                response = f"{st.session_state.user_name}, afsuski Excel faylingizdan <b>{maqsad_kun}</b> kuniga doir darslar topilmadi."
+                if flag and any(f"fan: {k}" in qator.lower() for k in hafta_kunlari): break
+                if flag: topilgan.append(qator)
+            response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and any(k in query for k in ["baho", "baxolar", "hamma", "jadval", "kundalik"]):
-            hamma_matn = "<br>".join([f"• {d}" for d in st.session_state.excel_rows])
-            response = f"{st.session_state.user_name}, sizning kundalik ma'lumotlaringiz:<br><br>{hamma_matn}"
-
+        # 4. 🔴 AGAR YUQORIDAGI MAVZULARGA TUSHMASA -> CHEKSIZ GEMINI AI ISHGA TUSHADI!
         else:
-            if st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is None:
-                response = f"Sening isming - Maktab AI. e-Maktab tizimidagi shaxsiy baholaringiz va dars jadvallaringizni AI orqali tahlil qilish uchun, avval yuqoridagi bo'limdan e-maktab Excel yoki matnli faylingizni yuklang, {st.session_state.user_name}."
-            else:
-                response = f"{st.session_state.user_name}, men bilan maktab rahbariyati, o'qituvchilar va maktab tarixi haqida batafsil suhbatlashishingiz mumkin. Savolingizni beravering!"
+            try:
+                model = genai.GenerativeModel('gemini-pro')
+                tizim_shaxsiyati = (
+                    f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
+                    f"Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Hozir senga foydalanuvchi {st.session_state.user_name} "
+                    f"savol bermoqda. Unga do'stona, aniq va o'zbek tilida javob ber. Savol quyidagicha: "
+                )
+                ai_response = model.generate_content(tizim_shaxsiyati + prompt)
+                response = ai_response.text
+            except Exception as e:
+                response = f"Uzr, Gemini AI tizimiga ulanishda xatolik yuz berdi. API kalitini secrets panelida tekshiring. Xatolik: {e}"
 
+        # Javobni ekranga chiqarish
         with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.rerun()
