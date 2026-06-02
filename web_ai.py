@@ -192,7 +192,7 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. 🔴 FAQAT v1beta TARMOQIDAN TO'G'RIDAN-TO'G'RI API SO'ROV
+        # 4. 🔴 TO'G'RIDAN-TO'G'RI API SO'ROV (YANGI MODELLAR BILAN)
         else:
             if not GEMINI_API_KEY:
                 response = "Xatolik: GEMINI_API_KEY topilmadi. Iltimos Secrets panelini tekshiring."
@@ -210,22 +210,25 @@ else:
                     }]
                 }
                 
-                # gemini-1.5-flash faqat v1beta tarmog'ida to'liq qo'llab-quvvatlanadi
-                url_beta = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+                # Google API uchun eng so'nggi va muammosiz ishlaydigan modellar ro'yxati
+                modellar = ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-pro"]
+                muvaffaqiyatli = False
                 
-                try:
-                    api_response = requests.post(url_beta, headers=headers, json=payload)
-                    res_json = api_response.json()
-                    
-                    if 'candidates' in res_json and res_json['candidates']:
-                        response = res_json['candidates'][0]['content']['parts'][0]['text']
-                    elif 'error' in res_json:
-                        response = f"Google API Xatoligi: {res_json['error'].get('message', 'Noma\'lum xatolik')}"
-                    else:
-                        response = f"Kutilmagan xatolik yuz berdi. Tizim javobi: {res_json}"
-                            
-                except Exception as e:
-                    response = f"Uzr, Gemini AI tizimiga ulanishda texnik xatolik yuz berdi. Xatolik: {e}"
+                for model in modellar:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+                    try:
+                        api_response = requests.post(url, headers=headers, json=payload)
+                        res_json = api_response.json()
+                        
+                        if 'candidates' in res_json and res_json['candidates']:
+                            response = res_json['candidates'][0]['content']['parts'][0]['text']
+                            muvaffaqiyatli = True
+                            break # Agar model ishlasa, sikldan chiqamiz
+                    except Exception:
+                        continue # Agar bu modelda xato bo'lsa, keyingisiga o'tadi
+                
+                if not muvaffaqiyatli:
+                    response = "Uzr, Google AI serverlari bilan ulanish imkoni bo'lmadi yoki model nomi o'zgargan. Iltimos keyinroq qayta urining."
 
         # Javobni ekranga chiqarish
         with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
