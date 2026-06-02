@@ -1,14 +1,10 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import google.generativeai as genai
+import requests  # Kutubxona versiyasiga bog'lanib qolmaslik uchun to'g'ridan-to'g'ri requests ishlatamiz
 
 # API Kalitini xavfsiz usulda st.secrets orqali o'qiymiz
-try:
-    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=GEMINI_API_KEY)
-except Exception:
-    st.error("Xatolik: GEMINI_API_KEY sirlar omboridan (secrets) topilmadi!")
+GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
 # Sahifa sozlamalari
 st.set_page_config(
@@ -196,27 +192,32 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. 🔴 MULTI-MODEL INTEGRATSIYA (KESH VA HAR QANDAY VERSYALAR UCHUN XAVFSIZ BLOK)
+        # 4. 🔴 TO'G'RIDAN-TO'G'RI API SO'ROV (KUTUBXONASIZ, MUTLOQ MUAMMOSIZ USUL)
         else:
-            tizim_shaxsiyati = (
-                f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
-                f"Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Hozir senga foydalanuvchi {st.session_state.user_name} "
-                f"savol bermoqda. Unga do'stona, aniq va o'zbek tilida javob ber. Savol quyidagicha: "
-            )
-            
-            # Agar tizim kesh tufayli yangi modelni tanimasa, eskisiga xavfsiz o'tadi
-            modellari = ['gemini-1.5-flash', 'gemini-pro']
-            for mod_nomi in modellari:
+            if not GEMINI_API_KEY:
+                response = "Xatolik: GEMINI_API_KEY topilmadi. Iltimos Secrets panelini tekshiring."
+            else:
+                tizim_shaxsiyati = (
+                    f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
+                    f"Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Hozir senga foydalanuvchi {st.session_state.user_name} "
+                    f"savol bermoqda. Unga do'stona, aniq va faqat o'zbek tilida javob ber. Savol quyidagicha: "
+                )
+                
+                # Google API URL manzili (v1beta versiyasi orqali to'g'ridan-to'g'ri requests)
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+                headers = {'Content-Type': 'application/json'}
+                payload = {
+                    "contents": [{
+                        "parts": [{"text": tizim_shaxsiyati + prompt}]
+                    }]
+                }
+                
                 try:
-                    model = genai.GenerativeModel(mod_nomi)
-                    ai_response = model.generate_content(tizim_shaxsiyati + prompt)
-                    response = ai_response.text
-                    break  # Agar model muvaffaqiyatli javob bersa, sikldan chiqamiz
-                except Exception:
-                    continue  # Xatolik bo'lsa, keyingi modelni sinaydi
-            
-            if not response:
-                response = "Uzr, Gemini AI tizimiga ulanishda xatolik yuz berdi. Iltimos, ilovani 'Reboot' qiling."
+                    api_response = requests.post(url, headers=headers, json=payload)
+                    res_json = api_response.json()
+                    response = res_json['candidates'][0]['content']['parts'][0]['text']
+                except Exception as e:
+                    response = f"Uzr, Gemini AI tizimiga ulanishda xatolik yuz berdi. Xatolik tafsiloti: {e}"
 
         # Javobni ekranga chiqarish
         with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
