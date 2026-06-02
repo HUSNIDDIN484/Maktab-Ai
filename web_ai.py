@@ -140,7 +140,7 @@ else:
         query = prompt.lower().strip().replace("o‘", "o'").replace("x", "h")
         response = ""
         
-        # Hafta kunlarini aniqlash
+        # Hafta kunlarini anixlash
         hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
         maqsad_kun = next((kun.capitalize() for kun in hafta_kunlari if kun in query), None)
         if maqsad_kun is None and ("bugun" in query or "darslar" in query): maqsad_kun = bugungi_hafta_kuni()
@@ -149,9 +149,9 @@ else:
         if st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
             response = f"Uzr, {st.session_state.user_name}. Shaxsiy e-Maktab ma'lumotlarini ko'rish uchun tizimga <b>O'quvchi</b> bo'lib kirishingiz kerak."
         elif st.session_state.user_role == "O'qituvchi" and any(k in query for k in ["mening vazifam", "e'lon", "elon"]):
-            response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadingiz."
+            response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadirgiz."
         
-        # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI (TO'LIQ RO'YXAT)
+        # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI
         elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
             response = (
                 f"{st.session_state.user_name}, 19-sonli maktab ma'muryati tarkibi:<br><br>"
@@ -199,7 +199,9 @@ else:
         # 4. 🔴 AGAR YUQORIDAGI MAVZULARGA TUSHMASA -> CHEKSIZ GEMINI AI ISHGA TUSHADI!
         else:
             try:
-                model = genai.GenerativeModel('gemini-pro')
+                # 'gemini-pro' o'rniga eng yangi 'gemini-1.5-flash' qo'yildi
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
                 tizim_shaxsiyati = (
                     f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
                     f"Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Hozir senga foydalanuvchi {st.session_state.user_name} "
