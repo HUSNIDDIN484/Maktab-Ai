@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import requests  # Kutubxona versiyalaridan qutulish uchun to'g'ridan-to'g'ri requests ishlatamiz
+import requests
 
 # API Kalitini xavfsiz usulda st.secrets orqali o'qiymiz
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
@@ -192,7 +192,7 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. 🔴 TO'G'RIDAN-TO'G'RI API SO'ROV (AVTOMATIK V1 / V1BETA STRUKTURASI)
+        # 4. 🔴 TO'G'RIDAN-TO'G'RI API SO'ROV (ENG TO'G'RI MUKAMMAL STRUKTURA)
         else:
             if not GEMINI_API_KEY:
                 response = "Xatolik: GEMINI_API_KEY topilmadi. Iltimos Secrets panelini tekshiring."
@@ -210,28 +210,29 @@ else:
                     }]
                 }
                 
-                # Birinchi bo'lib v1beta tarmog'ini tekshiramiz (u modellar nomini kengroq tushunadi)
+                # To'g'ridan-to'g'ri requests ishlatganda modellar manzili to'liq yozilishi shart:
                 url_beta = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
                 url_v1 = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
                 
                 try:
-                    # v1beta orqali urinib ko'rish
+                    # Birinchi bo'lib barqarorroq bo'lgan v1beta tarmog'idan urinib ko'ramiz
                     api_response = requests.post(url_beta, headers=headers, json=payload)
                     res_json = api_response.json()
                     
                     if 'candidates' in res_json and res_json['candidates']:
                         response = res_json['candidates'][0]['content']['parts'][0]['text']
                     else:
-                        # Agar v1beta bo'lmasa, v1 standartiga o'tadi
+                        # Agar v1beta mos kelmasa, zaxira sifatida v1 tarmog'iga yuboramiz
                         api_response = requests.post(url_v1, headers=headers, json=payload)
                         res_json = api_response.json()
+                        
                         if 'candidates' in res_json and res_json['candidates']:
                             response = res_json['candidates'][0]['content']['parts'][0]['text']
                         elif 'error' in res_json:
                             response = f"Google API Xatoligi: {res_json['error'].get('message', 'Noma\'lum xatolik')}"
                         else:
-                            response = f"Kutilmagan javob formati olindi. Tizim javobi: {res_json}"
-                        
+                            response = f"Kutilmagan javob formati. Tizim javobi: {res_json}"
+                            
                 except Exception as e:
                     response = f"Uzr, Gemini AI tizimiga ulanishda xatolik yuz berdi. Xatolik tafsiloti: {e}"
 
