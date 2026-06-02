@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import requests  # Kutubxona versiyasiga bog'lanib qolmaslik uchun to'g'ridan-to'g'ri requests ishlatamiz
+import requests  # Kutubxona versiyalaridan qutulish uchun to'g'ridan-to'g'ri requests ishlatamiz
 
 # API Kalitini xavfsiz usulda st.secrets orqali o'qiymiz
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
@@ -192,7 +192,7 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. 🔴 TO'G'RIDAN-TO'G'RI API SO'ROV (KUTUBXONASIZ, MUTLOQ MUAMMOSIZ USUL)
+        # 4. 🔴 TO'G'RIDAN-TO'G'RI API SO'ROV (KUTUBXONASIZ VA MUSTAHKAM STRUKTURA)
         else:
             if not GEMINI_API_KEY:
                 response = "Xatolik: GEMINI_API_KEY topilmadi. Iltimos Secrets panelini tekshiring."
@@ -203,8 +203,8 @@ else:
                     f"savol bermoqda. Unga do'stona, aniq va faqat o'zbek tilida javob ber. Savol quyidagicha: "
                 )
                 
-                # Google API URL manzili (v1beta versiyasi orqali to'g'ridan-to'g'ri requests)
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+                # Eng barqaror v1 API manzili
+                url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
                 headers = {'Content-Type': 'application/json'}
                 payload = {
                     "contents": [{
@@ -215,7 +215,15 @@ else:
                 try:
                     api_response = requests.post(url, headers=headers, json=payload)
                     res_json = api_response.json()
-                    response = res_json['candidates'][0]['content']['parts'][0]['text']
+                    
+                    # API'dan kelgan javob strukturasini xavfsiz o'qiymiz
+                    if 'candidates' in res_json and res_json['candidates']:
+                        response = res_json['candidates'][0]['content']['parts'][0]['text']
+                    elif 'error' in res_json:
+                        response = f"Google API Xatoligi: {res_json['error'].get('message', 'Noma\'lum xatolik')}"
+                    else:
+                        response = f"Kutilmagan javob formati olindi. Tizim javobi: {res_json}"
+                        
                 except Exception as e:
                     response = f"Uzr, Gemini AI tizimiga ulanishda xatolik yuz berdi. Xatolik tafsiloti: {e}"
 
