@@ -196,21 +196,27 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. 🔴 ENG YANGI GEMINI MODEL INTEGRATSIYASI
+        # 4. 🔴 MULTI-MODEL INTEGRATSIYA (KESH VA HAR QANDAY VERSYALAR UCHUN XAVFSIZ BLOK)
         else:
-            try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                
-                tizim_shaxsiyati = (
-                    f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
-                    f"Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Hozir senga foydalanuvchi {st.session_state.user_name} "
-                    f"savol bermoqda. Unga do'stona, aniq va o'zbek tilida javob ber. Savol quyidagicha: "
-                )
-                
-                ai_response = model.generate_content(tizim_shaxsiyati + prompt)
-                response = ai_response.text
-            except Exception as e:
-                response = f"Uzr, Gemini AI tizimiga ulanishda xatolik yuz berdi. Xatolik: {e}"
+            tizim_shaxsiyati = (
+                f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
+                f"Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Hozir senga foydalanuvchi {st.session_state.user_name} "
+                f"savol bermoqda. Unga do'stona, aniq va o'zbek tilida javob ber. Savol quyidagicha: "
+            )
+            
+            # Agar tizim kesh tufayli yangi modelni tanimasa, eskisiga xavfsiz o'tadi
+            modellari = ['gemini-1.5-flash', 'gemini-pro']
+            for mod_nomi in modellari:
+                try:
+                    model = genai.GenerativeModel(mod_nomi)
+                    ai_response = model.generate_content(tizim_shaxsiyati + prompt)
+                    response = ai_response.text
+                    break  # Agar model muvaffaqiyatli javob bersa, sikldan chiqamiz
+                except Exception:
+                    continue  # Xatolik bo'lsa, keyingi modelni sinaydi
+            
+            if not response:
+                response = "Uzr, Gemini AI tizimiga ulanishda xatolik yuz berdi. Iltimos, ilovani 'Reboot' qiling."
 
         # Javobni ekranga chiqarish
         with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
