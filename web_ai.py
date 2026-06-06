@@ -2,9 +2,31 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import requests
+import json
+import os
 
 # API Kalitini xavfsiz usulda st.secrets orqali o'qiymiz
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
+BAZA_FAYLI = "elonlar_baza.json"
+
+# --- BAZA BILAN ISHLASH FUNKSIYALARI ---
+def elonni_bazaga_yoz(elon_matni):
+    """E'lonni hamma ko'rishi uchun JSON faylga doimiy saqlaydi"""
+    ma'lumot = {"elon": elon_matni, "vaqt": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+    with open(BAZA_FAYLI, "w", encoding="utf-8") as f:
+        json.dump(ma'lumot, f, ensure_ascii=False, indent=4)
+
+def elonni_bazadan_oqi():
+    """Fayldan e'lonni o'qib oladi, agar fayl bo'lmasa None qaytaradi"""
+    if os.path.exists(BAZA_FAYLI):
+        try:
+            with open(BAZA_FAYLI, "r", encoding="utf-8") as f:
+                ma'lumot = json.load(f)
+                return ma'lumot.get("elon", None)
+        except Exception:
+            return None
+    return None
+# ----------------------------------------
 
 # Sahifa sozlamalari
 st.set_page_config(
@@ -62,7 +84,6 @@ if "user_name" not in st.session_state: st.session_state.user_name = None
 if "user_role" not in st.session_state: st.session_state.user_role = None
 if "teacher_subject" not in st.session_state: st.session_state.teacher_subject = None
 if "excel_rows" not in st.session_state: st.session_state.excel_rows = None
-if "teacher_announcement" not in st.session_state: st.session_state.teacher_announcement = None
 if "messages" not in st.session_state: st.session_state.messages = []
 
 # Kirish oynasi
@@ -90,7 +111,6 @@ else:
 
     if st.sidebar.button("Tizimdan chiqish"):
         st.session_state.user_name = None; st.session_state.user_role = None; st.session_state.teacher_subject = None
-        # DIQQAT: st.session_state.teacher_announcement BU YERDAN OLIB TASHLANDI (e'lon o'chib ketmaydi)
         st.session_state.messages = []
         st.rerun()
 
@@ -120,10 +140,13 @@ else:
     # O'qituvchi paneli
     elif st.session_state.user_role == "O'qituvchi":
         with st.expander("📝 O'qituvchining tezkor boshqaruv paneli", expanded=True):
-            elon_matni = st.text_area("Bugungi dars yuzasidan e'lon yoki vazifa:", value=st.session_state.teacher_announcement if st.session_state.teacher_announcement else "")
+            # Mavjud e'lonni bazadan o'qib maydonga chiqaradi
+            joriy_elon = elonni_bazadan_oqi()
+            elon_matni = st.text_area("Bugungi dars yuzasidan e'lon yoki vazifa:", value=joriy_elon if joriy_elon else "")
             if st.button("E'lonni saqlash"):
-                st.session_state.teacher_announcement = f"<b>{st.session_state.user_name} ({st.session_state.teacher_subject}):</b> {elon_matni.strip()}"
-                st.success("E'lon saqlandi!")
+                yangi_elon_formati = f"<b>{st.session_state.user_name} ({st.session_state.teacher_subject}):</b> {elon_matni.strip()}"
+                elonni_bazaga_yoz(yangi_elon_formati)
+                st.success("E'lon hammaga ko'rinadigan qilib bazaga saqlandi!")
 
     # Chat tarixini chiqarish
     for message in st.session_state.messages:
@@ -142,14 +165,15 @@ else:
         maqsad_kun = next((kun.capitalize() for kun in hafta_kunlari if kun in query), None)
         if maqsad_kun is None and ("bugun" in query or "darslar" in query): maqsad_kun = bugungi_hafta_kuni()
 
-        # YANGI QO'SHILGAN QISM: E'lonlarni har qanday rolda tekshirish
+        # HAQIQIY BAZADAN E'LONLARNI TEKSHIRISH (Hamma rollar uchun ishlaydi)
         if any(k in query for k in ["elon", "vazifa", "topshiriq", "oqituvchi eloni"]):
-            if st.session_state.teacher_announcement:
-                response = f"📢 <b>O'qituvchilar tomonidan qoldirilgan e'lon:</b><br><br>{st.session_state.teacher_announcement}"
+            baza_eloni = elonni_bazadan_oqi()
+            if baza_eloni:
+                response = f"📢 <b>O'qituvchilar tomonidan qoldirilgan faol e'lon:</b><br><br>{baza_eloni}"
             else:
-                response = "Hozircha o'qituvchilar tomonidan qoldirilgan hech qanday faol e'lon yoki vazifa mavjud emas."
+                response = "Hozircha bazada hech qanday faol e'lon yoki vazifa mavjud emas."
 
-        # 1. TAQIQLAR VA FILTRLAR (E'lon filtrdan tashqariga chiqarildi)
+        # 1. TAQIQLAR VA FILTRLAR
         elif st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
             response = f"Uzr, {st.session_state.user_name}. Shaxsiy e-Maktab ma'lumotlarini ko'rish uchun tizimga <b>O'quvchi</b> bo'lib kirishingiz kerak."
         
