@@ -90,7 +90,8 @@ else:
 
     if st.sidebar.button("Tizimdan chiqish"):
         st.session_state.user_name = None; st.session_state.user_role = None; st.session_state.teacher_subject = None
-        st.session_state.excel_rows = None; st.session_state.teacher_announcement = None; st.session_state.messages = []
+        # DIQQAT: st.session_state.teacher_announcement BU YERDAN OLIB TASHLANDI (e'lon o'chib ketmaydi)
+        st.session_state.messages = []
         st.rerun()
 
     # O'quvchi uchun Excel yuklash paneli
@@ -121,7 +122,7 @@ else:
         with st.expander("📝 O'qituvchining tezkor boshqaruv paneli", expanded=True):
             elon_matni = st.text_area("Bugungi dars yuzasidan e'lon yoki vazifa:", value=st.session_state.teacher_announcement if st.session_state.teacher_announcement else "")
             if st.button("E'lonni saqlash"):
-                st.session_state.teacher_announcement = elon_matni.strip()
+                st.session_state.teacher_announcement = f"<b>{st.session_state.user_name} ({st.session_state.teacher_subject}):</b> {elon_matni.strip()}"
                 st.success("E'lon saqlandi!")
 
     # Chat tarixini chiqarish
@@ -141,11 +142,16 @@ else:
         maqsad_kun = next((kun.capitalize() for kun in hafta_kunlari if kun in query), None)
         if maqsad_kun is None and ("bugun" in query or "darslar" in query): maqsad_kun = bugungi_hafta_kuni()
 
-        # 1. TAQIQLAR VA FILTRLAR
-        if st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
+        # YANGI QO'SHILGAN QISM: E'lonlarni har qanday rolda tekshirish
+        if any(k in query for k in ["elon", "vazifa", "topshiriq", "oqituvchi eloni"]):
+            if st.session_state.teacher_announcement:
+                response = f"📢 <b>O'qituvchilar tomonidan qoldirilgan e'lon:</b><br><br>{st.session_state.teacher_announcement}"
+            else:
+                response = "Hozircha o'qituvchilar tomonidan qoldirilgan hech qanday faol e'lon yoki vazifa mavjud emas."
+
+        # 1. TAQIQLAR VA FILTRLAR (E'lon filtrdan tashqariga chiqarildi)
+        elif st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
             response = f"Uzr, {st.session_state.user_name}. Shaxsiy e-Maktab ma'lumotlarini ko'rish uchun tizimga <b>O'quvchi</b> bo'lib kirishingiz kerak."
-        elif st.session_state.user_role == "O'qituvchi" and any(k in query for k in ["mening vazifam", "e'lon", "elon"]):
-            response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadingiz."
         
         # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI
         elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
@@ -192,7 +198,7 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. 🔴 TO'G'RIDAN-TO'G'RI API SO'ROV (YANGI MODELLAR BILAN)
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV
         else:
             if not GEMINI_API_KEY:
                 response = "Xatolik: GEMINI_API_KEY topilmadi. Iltimos Secrets panelini tekshiring."
@@ -210,7 +216,6 @@ else:
                     }]
                 }
                 
-                # Google API uchun eng so'nggi va muammosiz ishlaydigan modellar ro'yxati
                 modellar = ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-pro"]
                 muvaffaqiyatli = False
                 
@@ -223,12 +228,12 @@ else:
                         if 'candidates' in res_json and res_json['candidates']:
                             response = res_json['candidates'][0]['content']['parts'][0]['text']
                             muvaffaqiyatli = True
-                            break # Agar model ishlasa, sikldan chiqamiz
+                            break
                     except Exception:
-                        continue # Agar bu modelda xato bo'lsa, keyingisiga o'tadi
+                        continue
                 
                 if not muvaffaqiyatli:
-                    response = "Uzr, Google AI serverlari bilan ulanish imkoni bo'lmadi yoki model nomi o'zgargan. Iltimos keyinroq qayta urining."
+                    response = "Uzr, Google AI serverlari bilan ulanish imkoni bo'lmadi. Iltimos keyinroq qayta urining."
 
         # Javobni ekranga chiqarish
         with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
