@@ -12,17 +12,17 @@ BAZA_FAYLI = "elonlar_baza.json"
 # --- BAZA BILAN ISHLASH FUNKSIYALARI ---
 def elonni_bazaga_yoz(elon_matni):
     """E'lonni hamma ko'rishi uchun JSON faylga doimiy saqlaydi"""
-    ma'lumot = {"elon": elon_matni, "vaqt": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+    malumot = {"elon": elon_matni, "vaqt": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
     with open(BAZA_FAYLI, "w", encoding="utf-8") as f:
-        json.dump(ma'lumot, f, ensure_ascii=False, indent=4)
+        json.dump(malumot, f, ensure_ascii=False, indent=4)
 
 def elonni_bazadan_oqi():
     """Fayldan e'lonni o'qib oladi, agar fayl bo'lmasa None qaytaradi"""
     if os.path.exists(BAZA_FAYLI):
         try:
             with open(BAZA_FAYLI, "r", encoding="utf-8") as f:
-                ma'lumot = json.load(f)
-                return ma'lumot.get("elon", None)
+                malumot = json.load(f)
+                return malumot.get("elon", None)
         except Exception:
             return None
     return None
@@ -140,7 +140,6 @@ else:
     # O'qituvchi paneli
     elif st.session_state.user_role == "O'qituvchi":
         with st.expander("📝 O'qituvchining tezkor boshqaruv paneli", expanded=True):
-            # Mavjud e'lonni bazadan o'qib maydonga chiqaradi
             joriy_elon = elonni_bazadan_oqi()
             elon_matni = st.text_area("Bugungi dars yuzasidan e'lon yoki vazifa:", value=joriy_elon if joriy_elon else "")
             if st.button("E'lonni saqlash"):
@@ -160,18 +159,18 @@ else:
         query = prompt.lower().strip().replace("o‘", "o'").replace("x", "h")
         response = ""
         
-        # Hafta kunlarini aniqlash
+        # Hafta kunlarini anixlash
         hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
         maqsad_kun = next((kun.capitalize() for kun in hafta_kunlari if kun in query), None)
         if maqsad_kun is None and ("bugun" in query or "darslar" in query): maqsad_kun = bugungi_hafta_kuni()
 
-        # HAQIQIY BAZADAN E'LONLARNI TEKSHIRISH (Hamma rollar uchun ishlaydi)
+        # JSON bazadan e'lonlarni tekshirish
         if any(k in query for k in ["elon", "vazifa", "topshiriq", "oqituvchi eloni"]):
             baza_eloni = elonni_bazadan_oqi()
             if baza_eloni:
                 response = f"📢 <b>O'qituvchilar tomonidan qoldirilgan faol e'lon:</b><br><br>{baza_eloni}"
             else:
-                response = "Hozircha bazada hech qanday faol e'lon yoki vazifa mavjud emas."
+                response = "Hozircha bazada hech qanday faol e'lon yoki vazifa maroon emas."
 
         # 1. TAQIQLAR VA FILTRLAR
         elif st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
