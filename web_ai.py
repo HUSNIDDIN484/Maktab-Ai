@@ -155,7 +155,7 @@ else:
                 f"• <b>Direktor o'rinbosarlari:</b> Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek.<br>"
                 f"• <b>Administrator:</b> Sabirova Iroda Yarash qizi."
             )
-        elif any(k in query for k in ["yaratgan", "muallif", "husniddin", "saparboyev"]):
+        elif any(k in query for k in ["yaratgan", "muallif", "saparboyev"]):
             response = f"Meni Xorazm viloyati, Yangiariq tumani, 19-sonli maktabning 8-B sinf o'quvchisi <b>Saparboyev Husniddin</b> yaratgan!"
         elif any(k in query for k in ["o'qituvchi", "ustoz", "fanlar", "ro'yxat", "oqituvchi"]):
             response = (
