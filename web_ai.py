@@ -78,7 +78,7 @@ if st.session_state.user_name is None:
     if st.button("Kirish"):
         if ism.strip():
             if rol == "O'qituvchi" and not fan.strip():
-                st.error("O'qituvchi fanmMi majburiy!")
+                st.error("O'qituvchi fani majburiy!")
             else:
                 st.session_state.user_name = ism.strip()
                 st.session_state.user_role = rol
