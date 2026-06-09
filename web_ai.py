@@ -73,12 +73,12 @@ if st.session_state.user_name is None:
     
     fan = ""
     if rol == "O'qituvchi":
-        fan = st.text_input("Dars beradigan fandingizni kiriting:", placeholder="Masalan: Matematika...")
+        fan = st.text_input("Dars beradigan faningizni kiriting:", placeholder="Masalan: Matematika...")
         
     if st.button("Kirish"):
         if ism.strip():
             if rol == "O'qituvchi" and not fan.strip():
-                st.error("O'qituvchi fandi majburiy!")
+                st.error("O'qituvchi fanmMi majburiy!")
             else:
                 st.session_state.user_name = ism.strip()
                 st.session_state.user_role = rol
