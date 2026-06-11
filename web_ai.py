@@ -149,7 +149,7 @@ else:
                 elonni_bazaga_yoz(yangi_elon_formati)
                 st.success("E'lon hammaga ko'rinadigan qilib bazaga saqlandi!")
 
-    # Chat tarixini chiqarish (TUZATILGAN QISM)
+    # Chat tarixini chiqarish
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"], unsafe_allow_html=True)
@@ -228,7 +228,7 @@ else:
                     topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (YANGILANGAN VA BARQAROR)
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (DIAGNOSTIKA BILAN)
         else:
             if not GEMINI_API_KEY:
                 response = "Xatolik: GEMINI_API_KEY topilmadi. Iltimos Secrets panelini tekshiring."
@@ -246,25 +246,32 @@ else:
                     }]
                 }
                 
-                # Eng oxirgi APIv1/v1beta barqaror modellari qo'yilgan
-                modellar = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-pro"]
+                # Sinab ko'rish uchun eng oxirgi v1beta va v1 modellar ro'yxati
+                modellar = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"]
                 muvaffaqiyatli = False
+                oxirgi_xato_matni = ""
                 
                 for model in modellar:
+                    # v1beta barqaror URL manzili
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
                     try:
-                        api_response = requests.post(url, headers=headers, json=payload)
+                        api_response = requests.post(url, headers=headers, json=payload, timeout=10)
                         res_json = api_response.json()
                         
                         if 'candidates' in res_json and res_json['candidates']:
                             response = res_json['candidates'][0]['content']['parts'][0]['text']
                             muvaffaqiyatli = True
                             break
-                    except Exception:
+                        elif 'error' in res_json:
+                            oxirgi_xato_matni = f"Model: {model} -> {res_json['error'].get('message', 'Noma\'lum xatolik')}"
+                        else:
+                            oxirgi_xato_matni = f"Model: {model} -> Kutilmagan JSON: {str(res_json)[:100]}"
+                    except Exception as e:
+                        oxirgi_xato_matni = f"Model: {model} -> Ulanish xatosi: {str(e)}"
                         continue
                 
                 if not muvaffaqiyatli:
-                    response = "Uzr, Google AI serverlari bilan ulanish imkoni bo'lmadi. Iltimos keyinroq qayta urining."
+                    response = f"⚠️ <b>Google AI serveri rad javobini berdi:</b><br><code style='color:#ff1744;'>{oxirgi_xato_matni}</code>"
 
         # Javobni ekranga chiqarish
         with st.chat_message("assistant"):
