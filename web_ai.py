@@ -175,7 +175,7 @@ else:
             if baza_eloni:
                 response = f"📢 <b>O'qituvchilar tomonidan qoldirilgan faol e'lon:</b><br><br>{baza_eloni}"
             else:
-                response = "Hozircha bazada hech qanday faol e'lon yoki vazifa mavjud emas."
+                response = "Hozircha bazada hech qanday faol e'lon yoki vazifa mutable emas."
 
         # 1. TAQIQLAR VA FILTRLAR
         elif st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
@@ -228,7 +228,7 @@ else:
                     topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (DIAGNOSTIKA BILAN)
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (ENG YANGI MODELLAR BILAN)
         else:
             if not GEMINI_API_KEY:
                 response = "Xatolik: GEMINI_API_KEY topilmadi. Iltimos Secrets panelini tekshiring."
@@ -246,13 +246,12 @@ else:
                     }]
                 }
                 
-                # Sinab ko'rish uchun eng oxirgi v1beta va v1 modellar ro'yxati
-                modellar = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"]
+                # Faqat ishlaydigan va eng oxirgi v1beta modellari qo'yildi
+                modellar = ["gemini-1.5-flash", "gemini-1.5-pro"]
                 muvaffaqiyatli = False
                 oxirgi_xato_matni = ""
                 
                 for model in modellar:
-                    # v1beta barqaror URL manzili
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
                     try:
                         api_response = requests.post(url, headers=headers, json=payload, timeout=10)
