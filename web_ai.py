@@ -175,7 +175,7 @@ else:
             if baza_eloni:
                 response = f"📢 <b>O'qituvchilar tomonidan qoldirilgan faol e'lon:</b><br><br>{baza_eloni}"
             else:
-                response = "Hozircha bazada hech qanday faol e'lon yoki vazifa mutable emas."
+                response = "Hozircha bazada hech qanday faol e'lon yoki vazifa mavjud emas."
 
         # 1. TAQIQLAR VA FILTRLAR
         elif st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
@@ -228,7 +228,7 @@ else:
                     topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (ENG YANGI MODELLAR BILAN)
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (ENG ZAMONAVIY MODELLAR)
         else:
             if not GEMINI_API_KEY:
                 response = "Xatolik: GEMINI_API_KEY topilmadi. Iltimos Secrets panelini tekshiring."
@@ -246,8 +246,8 @@ else:
                     }]
                 }
                 
-                # Faqat ishlaydigan va eng oxirgi v1beta modellari qo'yildi
-                modellar = ["gemini-1.5-flash", "gemini-1.5-pro"]
+                # Google so'rovini qabul qiladigan yakuniy barqaror modellar
+                modellar = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"]
                 muvaffaqiyatli = False
                 oxirgi_xato_matni = ""
                 
