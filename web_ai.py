@@ -192,7 +192,7 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (DIAGNOSTIKA REJIMIDA)
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (TO'G'RILANGAN STANDART MODELLAR)
         else:
             if not GEMINI_API_KEY:
                 response = "⚠️ <b>Xatolik:</b> `GEMINI_API_KEY` topilmadi! Streamlit Dashboard -> Settings -> Secrets qismiga kalitni kiriting."
@@ -210,8 +210,8 @@ else:
                     }]
                 }
                 
-                # API xatosini aniq ko'rsatuvchi diagnostika tsikli
-                modellar = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"]
+                # To'g'ri model nomlari ro'yxati (404 xatoligini bermaydigan rasmiy v1beta nomlari)
+                modellar = ["gemini-1.5-flash", "gemini-1.5-pro"]
                 muvaffaqiyatli = False
                 oxirgi_xato = ""
                 
@@ -228,9 +228,9 @@ else:
                         elif 'error' in res_json:
                             oxirgi_xato = f"Model: {model} -> Kod: {res_json['error'].get('code')} -> Xabar: {res_json['error'].get('message')}"
                         else:
-                            oxirgi_xato = f"Model: {model} -> Kutilmagan JSON javob: {str(res_json)[:150]}"
+                            oxirgi_xato = f"Model: {model} -> Kutilmagan server formati."
                     except Exception as e:
-                        oxirgi_xato = f"Model: {model} -> Ulanish xatosi (Exception): {str(e)}"
+                        oxirgi_xato = f"Model: {model} -> Aloqa xatosi: {str(e)}"
                         continue
                 
                 if not muvaffaqiyatli:
