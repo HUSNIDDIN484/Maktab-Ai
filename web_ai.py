@@ -2,31 +2,9 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import requests
-import json
-import os
 
 # API Kalitini xavfsiz usulda st.secrets orqali o'qiymiz
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
-BAZA_FAYLI = "elonlar_baza.json"
-
-# --- BAZA BILAN ISHLASH FUNKSIYALARI ---
-def elonni_bazaga_yoz(elon_matni):
-    """E'lonni hamma ko'rishi uchun JSON faylga doimiy saqlaydi"""
-    malumot = {"elon": elon_matni, "vaqt": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-    with open(BAZA_FAYLI, "w", encoding="utf-8") as f:
-        json.dump(malumot, f, ensure_ascii=False, indent=4)
-
-def elonni_bazadan_oqi():
-    """Fayldan e'lonni o'qib oladi, agar fayl bo'lmasa None qaytaradi"""
-    if os.path.exists(BAZA_FAYLI):
-        try:
-            with open(BAZA_FAYLI, "r", encoding="utf-8") as f:
-                malumot = json.load(f)
-                return malumot.get("elon", None)
-        except Exception:
-            return None
-    return None
-# ----------------------------------------
 
 # Sahifa sozlamalari
 st.set_page_config(
@@ -84,6 +62,7 @@ if "user_name" not in st.session_state: st.session_state.user_name = None
 if "user_role" not in st.session_state: st.session_state.user_role = None
 if "teacher_subject" not in st.session_state: st.session_state.teacher_subject = None
 if "excel_rows" not in st.session_state: st.session_state.excel_rows = None
+if "teacher_announcement" not in st.session_state: st.session_state.teacher_announcement = None
 if "messages" not in st.session_state: st.session_state.messages = []
 
 # Kirish oynasi
@@ -110,10 +89,8 @@ else:
     st.markdown(f'<div class="main-container"><div class="main-title">🏫 19-SON MAKTAB AI</div><div class="welcome-text">Salom, {st.session_state.user_name}! 👋</div><div class="role-badge">Tizimda: {role_display}</div></div>', unsafe_allow_html=True)
 
     if st.sidebar.button("Tizimdan chiqish"):
-        st.session_state.user_name = None
-        st.session_state.user_role = None
-        st.session_state.teacher_subject = None
-        st.session_state.messages = []
+        st.session_state.user_name = None; st.session_state.user_role = None; st.session_state.teacher_subject = None
+        st.session_state.excel_rows = None; st.session_state.teacher_announcement = None; st.session_state.messages = []
         st.rerun()
 
     # O'quvchi uchun Excel yuklash paneli
@@ -142,22 +119,18 @@ else:
     # O'qituvchi paneli
     elif st.session_state.user_role == "O'qituvchi":
         with st.expander("📝 O'qituvchining tezkor boshqaruv paneli", expanded=True):
-            joriy_elon = elonni_bazadan_oqi()
-            elon_matni = st.text_area("Bugungi dars yuzasidan e'lon yoki vazifa:", value=joriy_elon if joriy_elon else "")
+            elon_matni = st.text_area("Bugungi dars yuzasidan e'lon yoki vazifa:", value=st.session_state.teacher_announcement if st.session_state.teacher_announcement else "")
             if st.button("E'lonni saqlash"):
-                yangi_elon_formati = f"<b>{st.session_state.user_name} ({st.session_state.teacher_subject}):</b> {elon_matni.strip()}"
-                elonni_bazaga_yoz(yangi_elon_formati)
-                st.success("E'lon hammaga ko'rinadigan qilib bazaga saqlandi!")
+                st.session_state.teacher_announcement = elon_matni.strip()
+                st.success("E'lon saqlandi!")
 
     # Chat tarixini chiqarish
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"], unsafe_allow_html=True)
+        with st.chat_message(message["role"]): st.markdown(message["content"], unsafe_allow_html=True)
 
     # Savol yuborilganda
     if prompt := st.chat_input("Savolingizni yozing..."):
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        with st.chat_message("user"): st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
         
         query = prompt.lower().strip().replace("o‘", "o'").replace("x", "h")
@@ -166,20 +139,13 @@ else:
         # Hafta kunlarini aniqlash
         hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
         maqsad_kun = next((kun.capitalize() for kun in hafta_kunlari if kun in query), None)
-        if maqsad_kun is None and ("bugun" in query or "darslar" in query): 
-            maqsad_kun = bugungi_hafta_kuni()
-
-        # JSON bazadan e'lonlarni tekshirish
-        if any(k in query for k in ["elon", "vazifa", "topshiriq", "oqituvchi eloni"]):
-            baza_eloni = elonni_bazadan_oqi()
-            if baza_eloni:
-                response = f"📢 <b>O'qituvchilar tomonidan qoldirilgan faol e'lon:</b><br><br>{baza_eloni}"
-            else:
-                response = "Hozircha bazada hech qanday faol e'lon yoki vazifa mavjud emas."
+        if maqsad_kun is None and ("bugun" in query or "darslar" in query): maqsad_kun = bugungi_hafta_kuni()
 
         # 1. TAQIQLAR VA FILTRLAR
-        elif st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
+        if st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
             response = f"Uzr, {st.session_state.user_name}. Shaxsiy e-Maktab ma'lumotlarini ko'rish uchun tizimga <b>O'quvchi</b> bo'lib kirishingiz kerak."
+        elif st.session_state.user_role == "O'qituvchi" and any(k in query for k in ["mening vazifam", "e'lon", "elon"]):
+            response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadingiz."
         
         # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI
         elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
@@ -222,13 +188,11 @@ else:
                     flag = True
                     topilgan.append(qator)
                     continue
-                if flag and any(f"fan: {k}" in qator.lower() for k in hafta_kunlari): 
-                    break
-                if flag: 
-                    topilgan.append(qator)
+                if flag and any(f"fan: {k}" in qator.lower() for k in hafta_kunlari): break
+                if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (ENG ZAMONAVIY MODELLAR)
+        # 4. 🔴 TO'G'RIDAN-TO'G'RI API SO'ROV (YANGI MODELLAR BILAN)
         else:
             if not GEMINI_API_KEY:
                 response = "Xatolik: GEMINI_API_KEY topilmadi. Iltimos Secrets panelini tekshiring."
@@ -246,34 +210,27 @@ else:
                     }]
                 }
                 
-                # Google so'rovini qabul qiladigan yakuniy barqaror modellar
-                modellar = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"]
+                # Google API uchun eng so'nggi va muammosiz ishlaydigan modellar ro'yxati
+                modellar = ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-pro"]
                 muvaffaqiyatli = False
-                oxirgi_xato_matni = ""
                 
                 for model in modellar:
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
                     try:
-                        api_response = requests.post(url, headers=headers, json=payload, timeout=10)
+                        api_response = requests.post(url, headers=headers, json=payload)
                         res_json = api_response.json()
                         
                         if 'candidates' in res_json and res_json['candidates']:
                             response = res_json['candidates'][0]['content']['parts'][0]['text']
                             muvaffaqiyatli = True
-                            break
-                        elif 'error' in res_json:
-                            oxirgi_xato_matni = f"Model: {model} -> {res_json['error'].get('message', 'Noma\'lum xatolik')}"
-                        else:
-                            oxirgi_xato_matni = f"Model: {model} -> Kutilmagan JSON: {str(res_json)[:100]}"
-                    except Exception as e:
-                        oxirgi_xato_matni = f"Model: {model} -> Ulanish xatosi: {str(e)}"
-                        continue
+                            break # Agar model ishlasa, sikldan chiqamiz
+                    except Exception:
+                        continue # Agar bu modelda xato bo'lsa, keyingisiga o'tadi
                 
                 if not muvaffaqiyatli:
-                    response = f"⚠️ <b>Google AI serveri rad javobini berdi:</b><br><code style='color:#ff1744;'>{oxirgi_xato_matni}</code>"
+                    response = "Uzr, Google AI serverlari bilan ulanish imkoni bo'lmadi yoki model nomi o'zgargan. Iltimos keyinroq qayta urining."
 
         # Javobni ekranga chiqarish
-        with st.chat_message("assistant"):
-            st.markdown(response, unsafe_allow_html=True)
+        with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.rerun()
