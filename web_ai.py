@@ -192,10 +192,10 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. 🔴 TO'G'RIDAN-TO'G'RI API SO'ROV (YANGI MODELLAR BILAN)
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (DIAGNOSTIKA REJIMIDA)
         else:
             if not GEMINI_API_KEY:
-                response = "Xatolik: GEMINI_API_KEY topilmadi. Iltimos Secrets panelini tekshiring."
+                response = "⚠️ <b>Xatolik:</b> `GEMINI_API_KEY` topilmadi! Streamlit Dashboard -> Settings -> Secrets qismiga kalitni kiriting."
             else:
                 tizim_shaxsiyati = (
                     f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
@@ -210,25 +210,31 @@ else:
                     }]
                 }
                 
-                # Google API uchun eng so'nggi va muammosiz ishlaydigan modellar ro'yxati
-                modellar = ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-pro"]
+                # API xatosini aniq ko'rsatuvchi diagnostika tsikli
+                modellar = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"]
                 muvaffaqiyatli = False
+                oxirgi_xato = ""
                 
                 for model in modellar:
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
                     try:
-                        api_response = requests.post(url, headers=headers, json=payload)
+                        api_response = requests.post(url, headers=headers, json=payload, timeout=12)
                         res_json = api_response.json()
                         
                         if 'candidates' in res_json and res_json['candidates']:
                             response = res_json['candidates'][0]['content']['parts'][0]['text']
                             muvaffaqiyatli = True
-                            break # Agar model ishlasa, sikldan chiqamiz
-                    except Exception:
-                        continue # Agar bu modelda xato bo'lsa, keyingisiga o'tadi
+                            break
+                        elif 'error' in res_json:
+                            oxirgi_xato = f"Model: {model} -> Kod: {res_json['error'].get('code')} -> Xabar: {res_json['error'].get('message')}"
+                        else:
+                            oxirgi_xato = f"Model: {model} -> Kutilmagan JSON javob: {str(res_json)[:150]}"
+                    except Exception as e:
+                        oxirgi_xato = f"Model: {model} -> Ulanish xatosi (Exception): {str(e)}"
+                        continue
                 
                 if not muvaffaqiyatli:
-                    response = "Uzr, Google AI serverlari bilan ulanish imkoni bo'lmadi yoki model nomi o'zgargan. Iltimos keyinroq qayta urining."
+                    response = f"🔴 <b>Google API Diagnostics:</b><br><code style='color:#ff1744; white-space: pre-wrap;'>{oxirgi_xato}</code>"
 
         # Javobni ekranga chiqarish
         with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
