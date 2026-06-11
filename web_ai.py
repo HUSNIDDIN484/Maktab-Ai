@@ -192,7 +192,7 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (KAFOLATLANGAN VERSIYALARI)
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (YANGI AVLOD YANGILANGAN MODELLARI)
         else:
             if not GEMINI_API_KEY:
                 response = "⚠️ <b>Xatolik:</b> `GEMINI_API_KEY` topilmadi! Streamlit Dashboard -> Settings -> Secrets qismiga kalitni kiriting."
@@ -210,8 +210,8 @@ else:
                     }]
                 }
                 
-                # Google v1beta versiyasi uchun 100% tasdiqlangan aniq model identifikatorlari
-                modellar = ["gemini-1.5-flash-001", "gemini-1.5-pro-001"]
+                # Googlening v1beta uchun hozirda to'liq qo'llab-quvvatlaydigan yangi model nomlari
+                modellar = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash"]
                 muvaffaqiyatli = False
                 oxirgi_xato = ""
                 
@@ -228,9 +228,9 @@ else:
                         elif 'error' in res_json:
                             oxirgi_xato = f"Model: {model} -> Kod: {res_json['error'].get('code')} -> Xabar: {res_json['error'].get('message')}"
                         else:
-                            oxirgi_xato = f"Model: {model} -> Kutilmagan ichki xato."
+                            oxirgi_xato = f"Model: {model} -> Kutilmagan server formati."
                     except Exception as e:
-                        oxirgi_xato = f"Model: {model} -> Ulanish xatosi: {str(e)}"
+                        oxirgi_xato = f"Model: {model} -> Aloqa xatosi: {str(e)}"
                         continue
                 
                 if not muvaffaqiyatli:
