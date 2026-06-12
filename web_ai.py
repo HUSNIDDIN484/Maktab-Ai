@@ -192,7 +192,7 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (YANGI AVLOD YANGILANGAN MODELLARI)
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (YANGI AVLOD GEMINI 2.0 / 2.5 MODELLARI)
         else:
             if not GEMINI_API_KEY:
                 response = "⚠️ <b>Xatolik:</b> `GEMINI_API_KEY` topilmadi! Streamlit Dashboard -> Settings -> Secrets qismiga kalitni kiriting."
@@ -210,8 +210,8 @@ else:
                     }]
                 }
                 
-                # Googlening v1beta uchun hozirda to'liq qo'llab-quvvatlaydigan yangi model nomlari
-                modellar = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash"]
+                # Yangilangan Google API v1beta modellari ro'yxati
+                modellar = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.5-pro"]
                 muvaffaqiyatli = False
                 oxirgi_xato = ""
                 
