@@ -161,7 +161,7 @@ else:
         elif st.session_state.user_role == "O'qituvchi" and any(k in query for k in ["mening vazifam", "e'lon", "elon"]):
             response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadingiz."
         
-        # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI
+        # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI (XATO TUZATILGAN QISM)
         elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
             response = (
                 f"{st.session_state.user_name}, 19-sonli maktab ma'muryati tarkibi:<br><br>"
@@ -169,4 +169,92 @@ else:
                 f"• <b>Direktor o'rinbosarlari:</b> Bekchanov Arslon, Jalilov Elbek, Salayev Mavlyanbek.<br>"
                 f"• <b>Administrator:</b> Sabirova Iroda Yarash qizi."
             )
-        elif any(k in query for k in
+        elif any(k in query for k in ["yaratgan", "muallif", "husniddin", "saparboyev"]):
+            response = f"Meni Xorazm viloyati, Yangiariq tumani, 19-sonli maktabning 8-B sinf o'quvchisi <b>Saparboyev Husniddin</b> yaratgan!"
+        elif any(k in query for k in ["o'qituvchi", "ustoz", "fanlar", "ro'yxat", "oqituvchi"]):
+            response = (
+                f"{st.session_state.user_name}, 19-sonli maktab o'qituvchilarining to'liq ro'yxati:<br><br>"
+                f"• <b>Matematika:</b> Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda.<br>"
+                f"• <b>Ona tili:</b> Avazova Risolat, Bobojonova Mushtariy, Jumaniyozova Sadoqat, Otajonova Sharofat, Xudoynazarova Nafosat.<br>"
+                f"• <b>Ingliz tili:</b> Eshmurodova Ra'no, Farxodova Muxtaram, Qo'shoqova Gulasal, Rajabova Lobar, Raxmanova So'najon, Sadullayeva Durdona.<br>"
+                f"• <b>Rus tili:</b> Bekmetova Shaxnoza, Bobojonova Komila, Saidova Saragul, Sobirova Nozima, Tillayeva Aziza, Yusupova Sanobar.<br>"
+                f"• <b>Tarix:</b> Allanazarova Zumrad, Matqurbonova Shohina, Matchanova Zebo, Sobirova Gulposhsha.<br>"
+                f"• <b>Fizika/Kimyo:</b> Aminova Mehriniso, Kurbonov Ollashukur, Razzaqova Kumushoy, Meylibayeva Aziza.<br>"
+                f"• <b>Informatika:</b> Quranboyeva Nafosat, Sabirova Iroda.<br>"
+                f"• <b>Boshlang'ich ta'lim:</b> Bobojonova Elmira, Maftuna, Jumanazarova Nargiza, Kenjayeva Iroda, Normatova Iqbol, Nurmetova Marhabo, Otajonova Sarvinoz, Quryozova Sanobar, Ro'ziboyeva Sarvinoz, Sadiqova Farida, Saidmatova Muattar, Saparmatova Sadoqat, Xo'jayeva Shahnoza.<br>"
+                f"• <b>Sport:</b> Pirnnazarov Nurali, Ro'zmetova Muhtarama, Xudaynazarov Davronbek, Yusupova Zuhraxon.<br>"
+                f"• <b>Musiqa/San'at:</b> O'razmetov O'tkir, Xusainov Sodiqjon, Otamuratov Rustam, Sobirova Maloxat.<br>"
+                f"• <b>Texnologiya:</b> Boltayeva Zebo, Eshchanova Nodira, Matkarimova Intizor, Matyoqubova Xusniobod, Sobirov Ollayor."
+            )
+        elif any(k in query for k in ["maktab", "tarix", "tashkil", "manzil", "qayerda", "qishloq", "mahalla"]):
+            response = (
+                f"<b>19-sonli umumta'lim maktabi haqida ma'lumot:</b><br><br>"
+                f"• <b>Tashkil etilgan vaqti:</b> Maktabimiz 1982-yil 2-sentabrda tashkil etilgan.<br>"
+                f"• <b>Manzilimiz:</b> Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
+            )
+        
+        # 3. EXCEL MA'LUMOTLARINI QIDIRISH
+        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and maqsad_kun is not None:
+            topilgan = []
+            flag = False
+            for qator in st.session_state.excel_rows:
+                if f"ma'lumot: {maqsad_kun.lower()}" in qator.lower() or f"fan: {maqsad_kun.lower()}" in qator.lower():
+                    flag = True
+                    topilgan.append(qator)
+                    continue
+                if flag and any(f"fan: {k}" in qator.lower() for k in hafta_kunlari): 
+                    break
+                if flag: 
+                    topilgan.append(qator)
+            response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
+
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV
+        else:
+            if not GEMINI_API_KEY:
+                response = "⚠️ <b>Xatolik:</b> `GEMINI_API_KEY` topilmadi! Streamlit Dashboard -> Settings -> Secrets qismiga kalitni kiriting."
+            else:
+                tizim_shaxsiyati = (
+                    f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
+                    f"Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Hozir senga foydalanuvchi {st.session_state.user_name} "
+                    f"savol bermoqda. Unga do'stona, aniq va faqat o'zbek tilida javob ber. Savol quyidagicha: "
+                )
+                
+                headers = {'Content-Type': 'application/json'}
+                payload = {
+                    "contents": [{
+                        "parts": [{"text": tizim_shaxsiyati + prompt}]
+                    }]
+                }
+                
+                modellar = ["gemini-2.0-flash", "gemini-2.5-flash"]
+                muvaffaqiyatli = False
+                oxirgi_xato = ""
+                
+                for model in modellar:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+                    try:
+                        api_response = requests.post(url, headers=headers, json=payload, timeout=30)
+                        res_json = api_response.json()
+                        
+                        if 'candidates' in res_json and res_json['candidates']:
+                            response = res_json['candidates'][0]['content']['parts'][0]['text']
+                            muvaffaqiyatli = True
+                            break
+                        elif 'error' in res_json:
+                            oxirgi_xato = f"Model: {model} -> Kod: {res_json['error'].get('code')} -> Xabar: {res_json['error'].get('message')}"
+                        else:
+                            oxirgi_xato = f"Model: {model} -> Kutilmagan server formati."
+                    except requests.exceptions.Timeout:
+                        oxirgi_xato = f"Model: {model} -> Server javob berish muddati tugadi (Timeout)."
+                    except Exception as e:
+                        oxirgi_xato = f"Model: {model} -> Aloqa xatosi: {str(e)}"
+                        continue
+                
+                if not muvaffaqiyatli:
+                    response = f"🔴 <b>Google API Diagnostics:</b><br><code style='color:#ff1744; white-space: pre-wrap;'>{oxirgi_xato}</code>"
+
+        # Javobni ekranga chiqarish
+        with st.chat_message("assistant"): 
+            st.markdown(response, unsafe_allow_html=True)
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.rerun()
