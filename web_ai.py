@@ -192,7 +192,7 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (ENG TEJAMKOR VA LIMITDAN O'TMADIGAN MODELLAR)
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV
         else:
             if not GEMINI_API_KEY:
                 response = "⚠️ <b>Xatolik:</b> `GEMINI_API_KEY` topilmadi! Streamlit Dashboard -> Settings -> Secrets qismiga kalitni kiriting."
@@ -210,7 +210,7 @@ else:
                     }]
                 }
                 
-                # Limitlarni asraydigan eng tezkor va eng tejamkor model ("gemini-2.0-flash") birinchi o'ringa qo'yildi
+                # Barqaror modellar ro'yxati
                 modellar = ["gemini-2.0-flash", "gemini-2.5-flash"]
                 muvaffaqiyatli = False
                 oxirgi_xato = ""
@@ -218,7 +218,8 @@ else:
                 for model in modellar:
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
                     try:
-                        api_response = requests.post(url, headers=headers, json=payload, timeout=12)
+                        # Katta so'rovlar yuklanib qolmasligi uchun timeout 30 soniyaga uzaytirildi
+                        api_response = requests.post(url, headers=headers, json=payload, timeout=30)
                         res_json = api_response.json()
                         
                         if 'candidates' in res_json and res_json['candidates']:
@@ -228,15 +229,8 @@ else:
                         elif 'error' in res_json:
                             oxirgi_xato = f"Model: {model} -> Kod: {res_json['error'].get('code')} -> Xabar: {res_json['error'].get('message')}"
                         else:
-                            oxirgi_xato = f"Model: {model} -> Kutilmagan server javobi."
+                            oxirgi_xato = f"Model: {model} -> Kutilmagan server formati."
+                    except requests.exceptions.Timeout:
+                        oxirgi_xato = f"Model: {model} -> Server javob berish muddati tugadi (Timeout). Iltimos, so'rovingiz hajmini kichikroq qiling (masalan, 30 ta test o'rniga 10 ta so'rang)."
                     except Exception as e:
-                        oxirgi_xato = f"Model: {model} -> Aloqa xatosi: {str(e)}"
-                        continue
-                
-                if not muvaffaqiyatli:
-                    response = f"🔴 <b>Google API Diagnostics:</b><br><code style='color:#ff1744; white-space: pre-wrap;'>{oxirgi_xato}</code>"
-
-        # Javobni ekranga chiqarish
-        with st.chat_message("assistant"): st.markdown(response, unsafe_allow_html=True)
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.rerun()
+                        oxirgi_xato = f"Model: {model} ->
