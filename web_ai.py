@@ -192,7 +192,7 @@ else:
                 if flag: topilgan.append(qator)
             response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
 
-        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (YANGI AVLOD GEMINI 2.0 / 2.5 MODELLARI)
+        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV (ENG TEJAMKOR VA LIMITDAN O'TMADIGAN MODELLAR)
         else:
             if not GEMINI_API_KEY:
                 response = "⚠️ <b>Xatolik:</b> `GEMINI_API_KEY` topilmadi! Streamlit Dashboard -> Settings -> Secrets qismiga kalitni kiriting."
@@ -210,8 +210,8 @@ else:
                     }]
                 }
                 
-                # Yangilangan Google API v1beta modellari ro'yxati
-                modellar = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.5-pro"]
+                # Limitlarni asraydigan eng tezkor va eng tejamkor model ("gemini-2.0-flash") birinchi o'ringa qo'yildi
+                modellar = ["gemini-2.0-flash", "gemini-2.5-flash"]
                 muvaffaqiyatli = False
                 oxirgi_xato = ""
                 
@@ -228,7 +228,7 @@ else:
                         elif 'error' in res_json:
                             oxirgi_xato = f"Model: {model} -> Kod: {res_json['error'].get('code')} -> Xabar: {res_json['error'].get('message')}"
                         else:
-                            oxirgi_xato = f"Model: {model} -> Kutilmagan server formati."
+                            oxirgi_xato = f"Model: {model} -> Kutilmagan server javobi."
                     except Exception as e:
                         oxirgi_xato = f"Model: {model} -> Aloqa xatosi: {str(e)}"
                         continue
