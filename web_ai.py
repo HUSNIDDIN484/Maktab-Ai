@@ -104,21 +104,69 @@ else:
         st.session_state.messages = []
         st.rerun()
 
-    # O'quvchi uchun Excel yuklash paneli (To'g'rilangan universal parser)
+    # O'quvchi uchun Excel yuklash paneli (e-Maktab uchun to'liq moslashtirilgan parser)
     if st.session_state.user_role == "O'quvchi":
         if st.session_state.excel_rows is None:
             with st.expander("📊 REAL e-Maktab Excel faylini yuklash", expanded=True):
                 uploaded_file = st.file_uploader("Excel faylni tanlang (.xlsx)", type=["xlsx"])
                 if uploaded_file is not None:
-                    df = pd.read_excel(uploaded_file)
-                    saqlangan_qatorlar = []
+                    # Sarlavhasiz (header=None) o'qiymiz, shunda 0, 1-qatorlar ham ma'lumot sifatida olinadi
+                    df = pd.read_excel(uploaded_file, header=None)
+                    
+                    saqlangan_darslar = []
+                    joriy_kun = ""
+                    joriy_sana = ""
                     
                     for index, row in df.iterrows():
-                        qator_elementlari = [str(val).strip() for val in row.values if pd.notna(val)]
-                        if qator_elementlari:
-                            saqlangan_qatorlar.append(" | ".join(qator_elementlari))
+                        row_vals = [str(val).strip() for val in row.values if pd.notna(val)]
+                        if not row_vals:
+                            continue
+                        
+                        full_row_str = " ".join(row_vals)
+                        
+                        # Kun va sana qatorini aniqlash (Masalan: Juma 04.09.2026)
+                        if any(k in full_row_str for k in ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"]):
+                            for item in row_vals:
+                                if item in ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"]:
+                                    joriy_kun = item
+                                elif "." in item and len(item) == 10:
+                                    joriy_sana = item
+                            continue
                             
-                    st.session_state.excel_rows = saqlangan_qatorlar
+                        # Jadval sarlavhalarini o'tkazib yuboramiz (№, Предмет, Оценка...)
+                        if "Предмет" in full_row_str or "№" in full_row_str or "Задания" in full_row_str:
+                            continue
+                            
+                        # Dars qatorlarini ajratib olish (Birinchi element tartib raqami bo'lsa, masalan: 1, 2, 3...)
+                        if row_vals[0].isdigit():
+                            num = row_vals[0]
+                            fan_nomi = row_vals[1] if len(row_vals) > 1 else ""
+                            
+                            # Baho va Vazifani ustun bo'yicha aniqlash
+                            baho = ""
+                            vazifa = ""
+                            
+                            if len(row_vals) == 3:
+                                # Agar 3 ta qiymat bo'lsa, 3-si vazifa yoki baho bo'lishi mumkin
+                                if row_vals[2].isdigit():
+                                    baho = row_vals[2]
+                                else:
+                                    vazifa = row_vals[2]
+                            elif len(row_vals) >= 4:
+                                baho = row_vals[2] if row_vals[2].isdigit() else ""
+                                vazifa = " ".join(row_vals[3:]) if not row_vals[2].isdigit() else " ".join(row_vals[3:])
+                            
+                            baho_text = f" | <b>Baho:</b> {baho}" if baho else ""
+                            vazifa_text = f" | <b>Vazifa:</b> {vazifa}" if vazifa else " | <i>(Vazifa berilmagan)</i>"
+                            
+                            dars_info = {
+                                "kun": joriy_kun,
+                                "sana": joriy_sana,
+                                "matn": f"<b>{num}. {fan_nomi}</b>{baho_text}{vazifa_text}"
+                            }
+                            saqlangan_darslar.append(dars_info)
+                            
+                    st.session_state.excel_rows = saqlangan_darslar
                     st.success("Excel muvaffaqiyatli o'qildi va saqlandi!")
                     st.rerun()
         else:
@@ -210,25 +258,23 @@ else:
                 f"• <b>Manzilimiz:</b> Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
             )
         
-        # 3. EXCEL MA'LUMOTLARINI QIDIRISH (ANIQ VA AMALIY SEARCH)
+        # 3. EXCEL MA'LUMOTLARINI QIDIRISH (A'LO DARAJA MOSLASHUVCHAN)
         elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None:
             topilgan = []
             bugungi_sana = datetime.now().strftime("%d.%m.%Y")
             
-            for qator in st.session_state.excel_rows:
-                qator_lower = qator.lower()
-                if bugungi_sana in qator or (maqsad_kun and maqsad_kun.lower() in qator_lower):
-                    topilgan.append(qator)
+            for item in st.session_state.excel_rows:
+                # Kun nomi yoki sana mos kelsa
+                if (maqsad_kun and item["kun"].lower() == maqsad_kun.lower()) or (bugungi_sana in item["sana"]):
+                    topilgan.append(item["matn"])
             
             if topilgan:
-                sarlavha = f"<b>{bugungi_sana} ({maqsad_kun or 'Bugun'})</b>"
-                response = f"{sarlavha} darslaringiz va ma'lumotlaringiz:<br><br>• " + "<br>• ".join(topilgan)
+                sarlavha = f"<b>{maqsad_kun or 'Bugun'} ({bugungi_sana}) dars jadvalingiz:</b>"
+                response = f"{sarlavha}<br><br>" + "<br>".join(topilgan)
             else:
-                barcha_qatorlar = "<br>• ".join(st.session_state.excel_rows[:8])
-                response = (
-                    f"⚠️ <b>{bugungi_sana}</b> ({maqsad_kun or 'Bugun'}) uchun darslar topilmadi.<br><br>"
-                    f"<b>Excel faylingizdagi dastlabki qatorlar:</b><br>• {barcha_qatorlar}"
-                )
+                # Agar sana/kun mos kelmasa, yuklangan barcha darslarni ko'rsatadi
+                barcha = [item["matn"] for item in st.session_state.excel_rows[:6]]
+                response = f"⚠️ <b>{maqsad_kun or 'Bugun'}</b> uchun darslar topilmadi.<br><br><b>Yuklangan faylingizdagi darslar:</b><br>" + "<br>".join(barcha)
 
         # 4. TO'G'RIDAN-TO'G'RI API SO'ROV
         else:
