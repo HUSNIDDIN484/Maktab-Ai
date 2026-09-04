@@ -104,7 +104,7 @@ else:
         st.session_state.messages = []
         st.rerun()
 
-    # O'quvchi uchun Excel yuklash paneli
+    # O'quvchi uchun Excel yuklash paneli (To'g'rilangan universal parser)
     if st.session_state.user_role == "O'quvchi":
         if st.session_state.excel_rows is None:
             with st.expander("📊 REAL e-Maktab Excel faylini yuklash", expanded=True):
@@ -112,22 +112,14 @@ else:
                 if uploaded_file is not None:
                     df = pd.read_excel(uploaded_file)
                     saqlangan_qatorlar = []
+                    
                     for index, row in df.iterrows():
-                        elementlar = []
-                        for k, v in row.items():
-                            if pd.notna(v):
-                                v_str = str(v).strip()
-                                k_str = str(k).strip()
-                                # Ustun nomlarini moslashtirish
-                                if "Unnamed: 1" in k_str: k_name = "Fan"
-                                elif "Unnamed: 2" in k_str: k_name = "Baho"
-                                elif "Unnamed: 3" in k_str: k_name = "Vazifa"
-                                else: k_name = k_str.replace("Дневник", "Ma'lumot")
-                                elementlar.append(f"<b>{k_name}:</b> {v_str}")
-                        if elementlar:
-                            saqlangan_qatorlar.append(" | ".join(elementlar))
+                        qator_elementlari = [str(val).strip() for val in row.values if pd.notna(val)]
+                        if qator_elementlari:
+                            saqlangan_qatorlar.append(" | ".join(qator_elementlari))
+                            
                     st.session_state.excel_rows = saqlangan_qatorlar
-                    st.success("Excel o'qildi va saqlandi!")
+                    st.success("Excel muvaffaqiyatli o'qildi va saqlandi!")
                     st.rerun()
         else:
             st.info("📊 Excel faylingiz muvaffaqiyatli yuklangan. Endi darslar va baholaringiz haqida so'rashingiz mumkin.")
@@ -218,26 +210,24 @@ else:
                 f"• <b>Manzilimiz:</b> Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
             )
         
-        # 3. EXCEL MA'LUMOTLARINI QIDIRISH (SANA VA KUN BO'YICHA YUKSAK DARADA OPTIMALLASHTIRILGAN)
+        # 3. EXCEL MA'LUMOTLARINI QIDIRISH (ANIQ VA AMALIY SEARCH)
         elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None:
             topilgan = []
             bugungi_sana = datetime.now().strftime("%d.%m.%Y")
             
-            # Excel ichidan sana yoki kun bo'yicha qidirish
             for qator in st.session_state.excel_rows:
                 qator_lower = qator.lower()
-                # Bugungi sana yoki kun nomi mos kelsa
                 if bugungi_sana in qator or (maqsad_kun and maqsad_kun.lower() in qator_lower):
                     topilgan.append(qator)
             
             if topilgan:
                 sarlavha = f"<b>{bugungi_sana} ({maqsad_kun or 'Bugun'})</b>"
-                response = f"{sarlavha} darslaringiz va ma'lumotlaringiz:<br><br>" + "<br>".join(topilgan)
+                response = f"{sarlavha} darslaringiz va ma'lumotlaringiz:<br><br>• " + "<br>• ".join(topilgan)
             else:
-                barcha_qatorlar = "<br>".join(st.session_state.excel_rows[:8])
+                barcha_qatorlar = "<br>• ".join(st.session_state.excel_rows[:8])
                 response = (
                     f"⚠️ <b>{bugungi_sana}</b> ({maqsad_kun or 'Bugun'}) uchun darslar topilmadi.<br><br>"
-                    f"<b>Excel faylingizdagi ma'lumotlar ko'rinishi:</b><br>{barcha_qatorlar}"
+                    f"<b>Excel faylingizdagi dastlabki qatorlar:</b><br>• {barcha_qatorlar}"
                 )
 
         # 4. TO'G'RIDAN-TO'G'RI API SO'ROV
