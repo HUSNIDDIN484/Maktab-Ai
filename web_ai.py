@@ -117,16 +117,20 @@ else:
                         for k, v in row.items():
                             if pd.notna(v):
                                 v_str = str(v).strip()
-                                if "Unnamed: 1" in str(k): k_name = "Fan"
-                                elif "Unnamed: 2" in str(k): k_name = "Baho"
-                                elif "Unnamed: 3" in str(k): k_name = "Vazifa"
-                                else: k_name = str(k).replace("Дневник", "Ma'lumot")
+                                k_str = str(k).strip()
+                                if "Unnamed: 1" in k_str: k_name = "Fan"
+                                elif "Unnamed: 2" in k_str: k_name = "Baho"
+                                elif "Unnamed: 3" in k_str: k_name = "Vazifa"
+                                else: k_name = k_str.replace("Дневник", "Ma'lumot")
                                 elementlar.append(f"<b>{k_name}:</b> {v_str}")
-                        saqlangan_qatorlar.append(" | ".join(elementlar))
+                        if elementlar:
+                            saqlangan_qatorlar.append(" | ".join(elementlar))
                     st.session_state.excel_rows = saqlangan_qatorlar
-                    st.success("Excel o'qildi!")
+                    st.success("Excel o'qildi va saqlandi!")
                     st.rerun()
-    
+        else:
+            st.info("📊 Excel faylingiz muvaffaqiyatli yuklangan. Endi darslar va baholaringiz haqida so'rashingiz mumkin.")
+
     # O'qituvchi paneli
     elif st.session_state.user_role == "O'qituvchi":
         with st.expander("📝 O'qituvchining tezkor boshqaruv paneli", expanded=True):
@@ -152,7 +156,7 @@ else:
         # Hafta kunlarini aniqlash
         hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
         maqsad_kun = next((kun.capitalize() for kun in hafta_kunlari if kun in query), None)
-        if maqsad_kun is None and ("bugun" in query or "darslar" in query): 
+        if maqsad_kun is None and any(k in query for k in ["bugun", "dars", "vazifa", "baho", "jadval"]): 
             maqsad_kun = bugungi_hafta_kuni()
 
         # 1. TAQIQLAR VA FILTRLAR
@@ -213,20 +217,28 @@ else:
                 f"• <b>Manzilimiz:</b> Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
             )
         
-        # 3. EXCEL MA'LUMOTLARINI QIDIRISH
-        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and maqsad_kun is not None:
+        # 3. EXCEL MA'LUMOTLARINI QIDIRISH (KUZATUVCHAN MOSLASHGAN MANTIQ)
+        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None:
             topilgan = []
-            flag = False
-            for qator in st.session_state.excel_rows:
-                if f"ma'lumot: {maqsad_kun.lower()}" in qator.lower() or f"fan: {maqsad_kun.lower()}" in qator.lower():
-                    flag = True
-                    topilgan.append(qator)
-                    continue
-                if flag and any(f"fan: {k}" in qator.lower() for k in hafta_kunlari): 
-                    break
-                if flag: 
-                    topilgan.append(qator)
-            response = f"<b>{maqsad_kun}</b> darslari:<br>" + "<br>".join(topilgan) if topilgan else "Darslar topilmadi."
+            
+            # Agar so'rovda aniq bir kun izlangan bo'lsa
+            if maqsad_kun:
+                for qator in st.session_state.excel_rows:
+                    if maqsad_kun.lower() in qator.lower():
+                        topilgan.append(qator)
+                
+                if topilgan:
+                    response = f"<b>{maqsad_kun}</b> darslari va ma'lumotlari:<br><br>" + "<br>".join(topilgan)
+                else:
+                    namuna = "<br>".join(st.session_state.excel_rows[:7])
+                    response = (
+                        f"⚠️ <b>{maqsad_kun}</b> so'zi Excel faylingiz ichidan topilmadi.<br><br>"
+                        f"<b>Yuklangan Excel faylingizdagi dastlabki qatorlar:</b><br>{namuna}"
+                    )
+            else:
+                # Umumiy javob sifatda birinchi 10 ta qatorni chiqaradi
+                barcha = "<br>".join(st.session_state.excel_rows[:10])
+                response = f"<b>Excel faylingizdagi ma'lumotlar:</b><br><br>{barcha}"
 
         # 4. TO'G'RIDAN-TO'G'RI API SO'ROV
         else:
