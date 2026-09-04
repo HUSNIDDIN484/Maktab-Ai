@@ -104,13 +104,12 @@ else:
         st.session_state.messages = []
         st.rerun()
 
-    # O'quvchi uchun Excel yuklash paneli (e-Maktab uchun to'liq moslashtirilgan parser)
+    # O'quvchi uchun Excel yuklash paneli
     if st.session_state.user_role == "O'quvchi":
         if st.session_state.excel_rows is None:
             with st.expander("📊 REAL e-Maktab Excel faylini yuklash", expanded=True):
                 uploaded_file = st.file_uploader("Excel faylni tanlang (.xlsx)", type=["xlsx"])
                 if uploaded_file is not None:
-                    # Sarlavhasiz (header=None) o'qiymiz, shunda 0, 1-qatorlar ham ma'lumot sifatida olinadi
                     df = pd.read_excel(uploaded_file, header=None)
                     
                     saqlangan_darslar = []
@@ -124,7 +123,6 @@ else:
                         
                         full_row_str = " ".join(row_vals)
                         
-                        # Kun va sana qatorini aniqlash (Masalan: Juma 04.09.2026)
                         if any(k in full_row_str for k in ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"]):
                             for item in row_vals:
                                 if item in ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"]:
@@ -133,21 +131,17 @@ else:
                                     joriy_sana = item
                             continue
                             
-                        # Jadval sarlavhalarini o'tkazib yuboramiz (№, Предмет, Оценка...)
                         if "Предмет" in full_row_str or "№" in full_row_str or "Задания" in full_row_str:
                             continue
                             
-                        # Dars qatorlarini ajratib olish (Birinchi element tartib raqami bo'lsa, masalan: 1, 2, 3...)
                         if row_vals[0].isdigit():
                             num = row_vals[0]
                             fan_nomi = row_vals[1] if len(row_vals) > 1 else ""
                             
-                            # Baho va Vazifani ustun bo'yicha aniqlash
                             baho = ""
                             vazifa = ""
                             
                             if len(row_vals) == 3:
-                                # Agar 3 ta qiymat bo'lsa, 3-si vazifa yoki baho bo'lishi mumkin
                                 if row_vals[2].isdigit():
                                     baho = row_vals[2]
                                 else:
@@ -194,19 +188,24 @@ else:
         query = prompt.lower().strip().replace("o‘", "o'").replace("x", "h")
         response = ""
         
-        # Hafta kunlarini aniqlash
+        # Hafta kunlarini va dars kalit so'zlarini aniqlash
         hafta_kunlari = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"]
         maqsad_kun = next((kun.capitalize() for kun in hafta_kunlari if kun in query), None)
-        if maqsad_kun is None and any(k in query for k in ["bugun", "dars", "vazifa", "baho", "jadval"]): 
-            maqsad_kun = bugungi_hafta_kuni()
+        
+        # Dars/jadvalga oid aniq so'rov mavjudligini buyruq darajasida tekshiramiz
+        dars_so'raldi = any(k in query for k in ["dars", "jadval", "kundalik", "vazifa", "baho", "bugungi dars"])
 
-        # 1. TAQIQLAR VA FILTRLAR
-        if st.session_state.user_role == "Kuzatuvchi" and any(k in query for k in ["dars", "baho", "kundalik", "excel"]):
+        # 1. SALOMLASHUV NOMI BILAN KELGANDA DARS CHIQAQMAYDI
+        if any(k in query for k in ["salom", "assalomu alaykum", "salomatsiz", "qalaysiz", "qandaysiz"]) and not dars_so'raldi:
+            response = f"Salom, {st.session_state.user_name}! Qanday yordam bera olaman?"
+
+        # 2. TAQIQLAR VA FILTRLAR
+        elif st.session_state.user_role == "Kuzatuvchi" and (dars_so'raldi or any(k in query for k in ["excel"])):
             response = f"Uzr, {st.session_state.user_name}. Shaxsiy e-Maktab ma'lumotlarini ko'rish uchun tizimga <b>O'quvchi</b> bo'lib kirishingiz kerak."
         elif st.session_state.user_role == "O'qituvchi" and any(k in query for k in ["mening vazifam", "e'lon", "elon"]):
             response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadingiz."
         
-        # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI
+        # 3. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI
         elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
             response = (
                 f"{st.session_state.user_name}, 19-sonli maktab ma'muryati tarkibi:<br><br>"
@@ -258,13 +257,15 @@ else:
                 f"• <b>Manzilimiz:</b> Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
             )
         
-        # 3. EXCEL MA'LUMOTLARINI QIDIRISH (A'LO DARAJA MOSLASHUVCHAN)
-        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None:
+        # 4. EXCEL MA'LUMOTLARINI QIDIRISH (FAQAT DARS SO'RALGANDA ISHLAYDI)
+        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and (dars_so'raldi or maqsad_kun is not None):
+            if maqsad_kun is None:
+                maqsad_kun = bugungi_hafta_kuni()
+                
             topilgan = []
             bugungi_sana = datetime.now().strftime("%d.%m.%Y")
             
             for item in st.session_state.excel_rows:
-                # Kun nomi yoki sana mos kelsa
                 if (maqsad_kun and item["kun"].lower() == maqsad_kun.lower()) or (bugungi_sana in item["sana"]):
                     topilgan.append(item["matn"])
             
@@ -272,11 +273,10 @@ else:
                 sarlavha = f"<b>{maqsad_kun or 'Bugun'} ({bugungi_sana}) dars jadvalingiz:</b>"
                 response = f"{sarlavha}<br><br>" + "<br>".join(topilgan)
             else:
-                # Agar sana/kun mos kelmasa, yuklangan barcha darslarni ko'rsatadi
                 barcha = [item["matn"] for item in st.session_state.excel_rows[:6]]
                 response = f"⚠️ <b>{maqsad_kun or 'Bugun'}</b> uchun darslar topilmadi.<br><br><b>Yuklangan faylingizdagi darslar:</b><br>" + "<br>".join(barcha)
 
-        # 4. TO'G'RIDAN-TO'G'RI API SO'ROV
+        # 5. TO'G'RIDAN-TO'G'RI API SO'ROV (UMUMIY AI SAVOLLAR UCHUN)
         else:
             if not GEMINI_API_KEY:
                 response = "⚠️ <b>Xatolik:</b> `GEMINI_API_KEY` topilmadi! Streamlit Dashboard -> Settings -> Secrets qismiga kalitni kiriting."
