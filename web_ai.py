@@ -118,6 +118,7 @@ else:
                             if pd.notna(v):
                                 v_str = str(v).strip()
                                 k_str = str(k).strip()
+                                # Ustun nomlarini moslashtirish
                                 if "Unnamed: 1" in k_str: k_name = "Fan"
                                 elif "Unnamed: 2" in k_str: k_name = "Baho"
                                 elif "Unnamed: 3" in k_str: k_name = "Vazifa"
@@ -217,28 +218,27 @@ else:
                 f"• <b>Manzilimiz:</b> Xorazm viloyati, Yangiariq tumani, Qo'riqtom qishlog'i, Po'rsang mahallasi."
             )
         
-        # 3. EXCEL MA'LUMOTLARINI QIDIRISH (KUZATUVCHAN MOSLASHGAN MANTIQ)
+        # 3. EXCEL MA'LUMOTLARINI QIDIRISH (SANA VA KUN BO'YICHA YUKSAK DARADA OPTIMALLASHTIRILGAN)
         elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None:
             topilgan = []
+            bugungi_sana = datetime.now().strftime("%d.%m.%Y")
             
-            # Agar so'rovda aniq bir kun izlangan bo'lsa
-            if maqsad_kun:
-                for qator in st.session_state.excel_rows:
-                    if maqsad_kun.lower() in qator.lower():
-                        topilgan.append(qator)
-                
-                if topilgan:
-                    response = f"<b>{maqsad_kun}</b> darslari va ma'lumotlari:<br><br>" + "<br>".join(topilgan)
-                else:
-                    namuna = "<br>".join(st.session_state.excel_rows[:7])
-                    response = (
-                        f"⚠️ <b>{maqsad_kun}</b> so'zi Excel faylingiz ichidan topilmadi.<br><br>"
-                        f"<b>Yuklangan Excel faylingizdagi dastlabki qatorlar:</b><br>{namuna}"
-                    )
+            # Excel ichidan sana yoki kun bo'yicha qidirish
+            for qator in st.session_state.excel_rows:
+                qator_lower = qator.lower()
+                # Bugungi sana yoki kun nomi mos kelsa
+                if bugungi_sana in qator or (maqsad_kun and maqsad_kun.lower() in qator_lower):
+                    topilgan.append(qator)
+            
+            if topilgan:
+                sarlavha = f"<b>{bugungi_sana} ({maqsad_kun or 'Bugun'})</b>"
+                response = f"{sarlavha} darslaringiz va ma'lumotlaringiz:<br><br>" + "<br>".join(topilgan)
             else:
-                # Umumiy javob sifatda birinchi 10 ta qatorni chiqaradi
-                barcha = "<br>".join(st.session_state.excel_rows[:10])
-                response = f"<b>Excel faylingizdagi ma'lumotlar:</b><br><br>{barcha}"
+                barcha_qatorlar = "<br>".join(st.session_state.excel_rows[:8])
+                response = (
+                    f"⚠️ <b>{bugungi_sana}</b> ({maqsad_kun or 'Bugun'}) uchun darslar topilmadi.<br><br>"
+                    f"<b>Excel faylingizdagi ma'lumotlar ko'rinishi:</b><br>{barcha_qatorlar}"
+                )
 
         # 4. TO'G'RIDAN-TO'G'RI API SO'ROV
         else:
