@@ -120,7 +120,7 @@ else:
                                 if "Unnamed: 1" in str(k): k_name = "Fan"
                                 elif "Unnamed: 2" in str(k): k_name = "Baho"
                                 elif "Unnamed: 3" in str(k): k_name = "Vazifa"
-                                else: k_name = str(k).replace("Дневник", "Ma'lumot")
+                                else: k_name = str(k).replace("Дnevnik", "Ma'lumot")
                                 elementlar.append(f"<b>{k_name}:</b> {v_str}")
                         saqlangan_qatorlar.append(" | ".join(elementlar))
                     st.session_state.excel_rows = saqlangan_qatorlar
@@ -161,7 +161,7 @@ else:
         elif st.session_state.user_role == "O'qituvchi" and any(k in query for k in ["mening vazifam", "e'lon", "elon"]):
             response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadingiz."
         
-        # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI (XATO TUZATILGAN QISM)
+        # 2. MAKTABNING MAXSUS MA'LUMOTLAR BAZASI
         elif any(k in query for k in ["direktor", "rahbar", "ma'muryat", "mamuryat", "o'rinbosar", "orinbosar", "administrator"]):
             response = (
                 f"{st.session_state.user_name}, 19-sonli maktab ma'muryati tarkibi:<br><br>"
@@ -172,20 +172,40 @@ else:
         elif any(k in query for k in ["yaratgan", "muallif", "husniddin", "saparboyev"]):
             response = f"Meni Xorazm viloyati, Yangiariq tumani, 19-sonli maktabning 8-B sinf o'quvchisi <b>Saparboyev Husniddin</b> yaratgan!"
         elif any(k in query for k in ["o'qituvchi", "ustoz", "fanlar", "ro'yxat", "oqituvchi"]):
-            response = (
-                f"{st.session_state.user_name}, 19-sonli maktab o'qituvchilarining to'liq ro'yxati:<br><br>"
-                f"• <b>Matematika:</b> Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda.<br>"
-                f"• <b>Ona tili:</b> Avazova Risolat, Bobojonova Mushtariy, Jumaniyozova Sadoqat, Otajonova Sharofat, Xudoynazarova Nafosat.<br>"
-                f"• <b>Ingliz tili:</b> Eshmurodova Ra'no, Farxodova Muxtaram, Qo'shoqova Gulasal, Rajabova Lobar, Raxmanova So'najon, Sadullayeva Durdona.<br>"
-                f"• <b>Rus tili:</b> Bekmetova Shaxnoza, Bobojonova Komila, Saidova Saragul, Sobirova Nozima, Tillayeva Aziza, Yusupova Sanobar.<br>"
-                f"• <b>Tarix:</b> Allanazarova Zumrad, Matqurbonova Shohina, Matchanova Zebo, Sobirova Gulposhsha.<br>"
-                f"• <b>Fizika/Kimyo:</b> Aminova Mehriniso, Kurbonov Ollashukur, Razzaqova Kumushoy, Meylibayeva Aziza.<br>"
-                f"• <b>Informatika:</b> Quranboyeva Nafosat, Sabirova Iroda.<br>"
-                f"• <b>Boshlang'ich ta'lim:</b> Bobojonova Elmira, Maftuna, Jumanazarova Nargiza, Kenjayeva Iroda, Normatova Iqbol, Nurmetova Marhabo, Otajonova Sarvinoz, Quryozova Sanobar, Ro'ziboyeva Sarvinoz, Sadiqova Farida, Saidmatova Muattar, Saparmatova Sadoqat, Xo'jayeva Shahnoza.<br>"
-                f"• <b>Sport:</b> Pirnnazarov Nurali, Ro'zmetova Muhtarama, Xudaynazarov Davronbek, Yusupova Zuhraxon.<br>"
-                f"• <b>Musiqa/San'at:</b> O'razmetov O'tkir, Xusainov Sodiqjon, Otamuratov Rustam, Sobirova Maloxat.<br>"
-                f"• <b>Texnologiya:</b> Boltayeva Zebo, Eshchanova Nodira, Matkarimova Intizor, Matyoqubova Xusniobod, Sobirov Ollayor."
-            )
+            ustozlar_bazasi = {
+                "matematika": "Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda",
+                "ona tili": "Avazova Risolat, Bobojonova Mushtariy, Jumaniyozova Sadoqat, Otajonova Sharofat, Xudoynazarova Nafosat",
+                "ingliz": "Eshmurodova Ra'no, Farxodova Muxtaram, Qo'shoqova Gulasal, Rajabova Lobar, Raxmanova So'najon, Sadullayeva Durdona",
+                "rus": "Bekmetova Shaxnoza, Bobojonova Komila, Saidova Saragul, Sobirova Nozima, Tillayeva Aziza, Yusupova Sanobar",
+                "tarix": "Allanazarova Zumrad, Matqurbonova Shohina, Matchanova Zebo, Sobirova Gulposhsha",
+                "fizika": "Aminova Mehriniso, Kurbonov Ollashukur, Razzaqova Kumushoy, Meylibayeva Aziza",
+                "kimyo": "Aminova Mehriniso, Kurbonov Ollashukur, Razzaqova Kumushoy, Meylibayeva Aziza",
+                "informatika": "Quranboyeva Nafosat, Sabirova Iroda",
+                "boshlang'ich": "Bobojonova Elmira, Maftuna, Jumanazarova Nargiza, Kenjayeva Iroda, Normatova Iqbol, Nurmetova Marhabo, Otajonova Sarvinoz, Quryozova Sanobar, Ro'ziboyeva Sarvinoz, Sadiqova Farida, Saidmatova Muattar, Saparmatova Sadoqat, Xo'jayeva Shahnoza",
+                "sport": "Pirnnazarov Nurali, Ro'zmetova Muhtarama, Xudaynazarov Davronbek, Yusupova Zuhraxon",
+                "musiqa": "O'razmetov O'tkir, Xusainov Sodiqjon, Otamuratov Rustam, Sobirova Maloxat",
+                "texnologiya": "Boltayeva Zebo, Eshchanova Nodira, Matkarimova Intizor, Matyoqubova Xusniobod, Sobirov Ollayor"
+            }
+            
+            topilgan_fan = next((f for f in ustozlar_bazasi if f in query), None)
+            
+            if topilgan_fan:
+                response = f"<b>19-sonli maktabning {topilgan_fan.capitalize()} fani o'qituvchilari:</b><br>{ustozlar_bazasi[topilgan_fan]}"
+            else:
+                response = (
+                    f"{st.session_state.user_name}, 19-sonli maktab o'qituvchilarining to'liq ro'yxati:<br><br>"
+                    f"• <b>Matematika:</b> {ustozlar_bazasi['matematika']}<br>"
+                    f"• <b>Ona tili:</b> {ustozlar_bazasi['ona tili']}<br>"
+                    f"• <b>Ingliz tili:</b> {ustozlar_bazasi['ingliz']}<br>"
+                    f"• <b>Rus tili:</b> {ustozlar_bazasi['rus']}<br>"
+                    f"• <b>Tarix:</b> {ustozlar_bazasi['tarix']}<br>"
+                    f"• <b>Fizika/Kimyo:</b> {ustozlar_bazasi['fizika']}<br>"
+                    f"• <b>Informatika:</b> {ustozlar_bazasi['informatika']}<br>"
+                    f"• <b>Boshlang'ich ta'lim:</b> {ustozlar_bazasi['boshlang\'ich']}<br>"
+                    f"• <b>Sport:</b> {ustozlar_bazasi['sport']}<br>"
+                    f"• <b>Musiqa/San'at:</b> {ustozlar_bazasi['musiqa']}<br>"
+                    f"• <b>Texnologiya:</b> {ustozlar_bazasi['texnologiya']}"
+                )
         elif any(k in query for k in ["maktab", "tarix", "tashkil", "manzil", "qayerda", "qishloq", "mahalla"]):
             response = (
                 f"<b>19-sonli umumta'lim maktabi haqida ma'lumot:</b><br><br>"
@@ -257,4 +277,4 @@ else:
         with st.chat_message("assistant"): 
             st.markdown(response, unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": response})
-        st.rerun()
+        st.rerun()f
