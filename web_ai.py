@@ -185,7 +185,7 @@ else:
             st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        query = prompt.lower().strip().replace("o‘", "o'").replace("x", "h")
+        query = prompt.lower().strip().replace("o‘", "o'").replace("o’", "o'").replace("x", "h")
         response = ""
         
         # Hafta kunlarini va dars kalit so'zlarini aniqlash
@@ -193,14 +193,14 @@ else:
         maqsad_kun = next((kun.capitalize() for kun in hafta_kunlari if kun in query), None)
         
         # Dars/jadvalga oid aniq so'rov mavjudligini buyruq darajasida tekshiramiz
-        dars_so'raldi = any(k in query for k in ["dars", "jadval", "kundalik", "vazifa", "baho", "bugungi dars"])
+        dars_soraldi = any(k in query for k in ["dars", "jadval", "kundalik", "vazifa", "baho", "bugungi dars"])
 
-        # 1. SALOMLASHUV NOMI BILAN KELGANDA DARS CHIQAQMAYDI
-        if any(k in query for k in ["salom", "assalomu alaykum", "salomatsiz", "qalaysiz", "qandaysiz"]) and not dars_so'raldi:
+        # 1. SALOMLASHUV NOMI BILAN KELGANDA DARS CHIQARMAYDI
+        if any(k in query for k in ["salom", "assalomu alaykum", "salomatsiz", "qalaysiz", "qandaysiz"]) and not dars_soraldi:
             response = f"Salom, {st.session_state.user_name}! Qanday yordam bera olaman?"
 
         # 2. TAQIQLAR VA FILTRLAR
-        elif st.session_state.user_role == "Kuzatuvchi" and (dars_so'raldi or any(k in query for k in ["excel"])):
+        elif st.session_state.user_role == "Kuzatuvchi" and (dars_soraldi or any(k in query for k in ["excel"])):
             response = f"Uzr, {st.session_state.user_name}. Shaxsiy e-Maktab ma'lumotlarini ko'rish uchun tizimga <b>O'quvchi</b> bo'lib kirishingiz kerak."
         elif st.session_state.user_role == "O'qituvchi" and any(k in query for k in ["mening vazifam", "e'lon", "elon"]):
             response = f"Siz qoldirgan e'lon:<br><i>\"{st.session_state.teacher_announcement}\"</i>" if st.session_state.teacher_announcement else "Hali e'lon qoldirmadingiz."
@@ -258,7 +258,7 @@ else:
             )
         
         # 4. EXCEL MA'LUMOTLARINI QIDIRISH (FAQAT DARS SO'RALGANDA ISHLAYDI)
-        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and (dars_so'raldi or maqsad_kun is not None):
+        elif st.session_state.user_role == "O'quvchi" and st.session_state.excel_rows is not None and (dars_soraldi or maqsad_kun is not None):
             if maqsad_kun is None:
                 maqsad_kun = bugungi_hafta_kuni()
                 
