@@ -120,7 +120,7 @@ else:
                                 if "Unnamed: 1" in str(k): k_name = "Fan"
                                 elif "Unnamed: 2" in str(k): k_name = "Baho"
                                 elif "Unnamed: 3" in str(k): k_name = "Vazifa"
-                                else: k_name = str(k).replace("Дnevnik", "Ma'lumot")
+                                else: k_name = str(k).replace("Дневник", "Ma'lumot")
                                 elementlar.append(f"<b>{k_name}:</b> {v_str}")
                         saqlangan_qatorlar.append(" | ".join(elementlar))
                     st.session_state.excel_rows = saqlangan_qatorlar
@@ -277,4 +277,4 @@ else:
         with st.chat_message("assistant"): 
             st.markdown(response, unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": response})
-        st.rerun()f
+        st.rerun()
