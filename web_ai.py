@@ -214,7 +214,7 @@ else:
                 f"• <b>Administrator:</b> Sabirova Iroda Yarash qizi."
             )
         elif any(k in query for k in ["yaratgan", "muallif", "husniddin", "saparboyev"]):
-            response = f"Meni Xorazm viloyati, Yangiariq tumani, 19-sonli maktabning 8-B sinf o'quvchisi <b>Saparboyev Husniddin</b> yaratgan!"
+            response = f"Meni Xorazm viloyati, Yangiariq tumani, 19-sonli maktabning 9-B sinf o'quvchisi <b>Saparboyev Husniddin</b> yaratgan!"
         elif any(k in query for k in ["o'qituvchi", "ustoz", "fanlar", "ro'yxat", "oqituvchi"]):
             ustozlar_bazasi = {
                 "matematika": "Egamova Rajabgul, Iskandarova Dilnavoz, Matkarimova Muxabbat, Quramboyeva O'g'iljon, Xudaynazarova Ziyoda",
@@ -283,7 +283,7 @@ else:
             else:
                 tizim_shaxsiyati = (
                     f"Sen Xorazm viloyati, Yangiariq tumani, 19-sonli maktab uchun yaratilgan 'Maktab AI' yordamchisisan. "
-                    f"Seni 8-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Hozir senga foydalanuvchi {st.session_state.user_name} "
+                    f"Seni 9-B sinf o'quvchisi Saparboyev Husniddin yaratgan. Hozir senga foydalanuvchi {st.session_state.user_name} "
                     f"savol bermoqda. Unga do'stona, aniq va faqat o'zbek tilida javob ber. Savol quyidagicha: "
                 )
                 
